@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive Pump & Valves</title>
+  <style>
+    .valve {
+      cursor: pointer;
+      transition: fill 0.3s;
+    }
+    .open {
+      fill: green;
+    }
+    .closed {
+      fill: red;
+    }
+    .flow-line {
+      stroke: lightblue;
+      stroke-width: 4;
+      stroke-dasharray: 6;
+      opacity: 0.2;
+      transition: opacity 0.3s;
+    }
+    .flow-active {
+      opacity: 1;
+    }
+    .label {
+      font-size: 12px;
+      text-anchor: middle;
+    }
+  </style>
+</head>
+<body>
+  <h3>Interactive Pump & Valve Diagram with Flow</h3>
+  <svg viewBox="0 0 500 400" width="100%" height="500">
+    <!-- Pump -->
+    <circle cx="250" cy="200" r="30" fill="gray" />
+    <text x="250" y="205" class="label">Pump</text>
+
+    <!-- Flow lines (Suction to Pump) -->
+    <line id="line-s1" class="flow-line" x1="120" y1="70" x2="250" y2="200" />
+    <line id="line-s2" class="flow-line" x1="120" y1="120" x2="250" y2="200" />
+    <line id="line-s3" class="flow-line" x1="120" y1="170" x2="250" y2="200" />
+    <line id="line-s4" class="flow-line" x1="120" y1="220" x2="250" y2="200" />
+
+    <!-- Flow lines (Pump to Return) -->
+    <line id="line-r1" class="flow-line" x1="250" y1="200" x2="380" y2="70" />
+    <line id="line-r2" class="flow-line" x1="250" y1="200" x2="380" y2="120" />
+    <line id="line-r3" class="flow-line" x1="250" y1="200" x2="380" y2="170" />
+    <line id="line-r4" class="flow-line" x1="250" y1="200" x2="380" y2="220" />
+
+    <!-- Suction Valves (Left Side) -->
+    <rect id="suction1" class="valve closed" x="100" y="60" width="20" height="20" />
+    <text x="110" y="55" class="label">S1</text>
+
+    <rect id="suction2" class="valve closed" x="100" y="110" width="20" height="20" />
+    <text x="110" y="105" class="label">S2</text>
+
+    <rect id="suction3" class="valve closed" x="100" y="160" width="20" height="20" />
+    <text x="110" y="155" class="label">S3</text>
+
+    <rect id="suction4" class="valve closed" x="100" y="210" width="20" height="20" />
+    <text x="110" y="205" class="label">S4</text>
+
+    <!-- Return Valves (Right Side) -->
+    <rect id="return1" class="valve closed" x="380" y="60" width="20" height="20" />
+    <text x="390" y="55" class="label">R1</text>
+
+    <rect id="return2" class="valve closed" x="380" y="110" width="20" height="20" />
+    <text x="390" y="105" class="label">R2</text>
+
+    <rect id="return3" class="valve closed" x="380" y="160" width="20" height="20" />
+    <text x="390" y="155" class="label">R3</text>
+
+    <rect id="return4" class="valve closed" x="380" y="210" width="20" height="20" />
+    <text x="390" y="205" class="label">R4</text>
+  </svg>
+
+  <script>
+    const valveToLine = {
+      suction1: "line-s1",
+      suction2: "line-s2",
+      suction3: "line-s3",
+      suction4: "line-s4",
+      return1: "line-r1",
+      return2: "line-r2",
+      return3: "line-r3",
+      return4: "line-r4",
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll('.valve').forEach(valve => {
+        valve.addEventListener('click', () => {
+          valve.classList.toggle('open');
+          valve.classList.toggle('closed');
+
+          const lineId = valveToLine[valve.id];
+          if (lineId) {
+            document.getElementById(lineId).classList.toggle('flow-active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
