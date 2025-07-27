@@ -4,25 +4,53 @@
   <meta charset="UTF-8">
   <title>Interactive Pump & Valves</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; }
-    svg { margin-top: 20px; }
-    .valve { cursor: pointer; transition: fill 0.3s; }
-    .open { fill: green; }
-    .closed { fill: red; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    svg {
+      margin-top: 20px;
+    }
+    .valve {
+      cursor: pointer;
+      transition: fill 0.3s;
+    }
+    .open {
+      fill: green;
+    }
+    .closed {
+      fill: red;
+    }
     .flow-line {
-      stroke: lightblue; stroke-width: 4; stroke-dasharray: 10;
-      stroke-dashoffset: 0; opacity: 0.1; transition: opacity 0.3s;
+      stroke: lightblue;
+      stroke-width: 4;
+      stroke-dasharray: 10;
+      stroke-dashoffset: 0;
+      opacity: 0.1;
+      transition: opacity 0.3s;
     }
     .flow-active {
-      opacity: 1; animation: flow 1s linear infinite;
+      opacity: 1;
+      animation: flow 1s linear infinite;
     }
-    @keyframes flow { to { stroke-dashoffset: -20; } }
-    .label { font-size: 14px; text-anchor: middle; }
-    .controls { margin: 10px; }
+    @keyframes flow {
+      to {
+        stroke-dashoffset: -20;
+      }
+    }
+    .label {
+      font-size: 14px;
+      text-anchor: middle;
+    }
+    .controls {
+      margin: 10px;
+    }
     button {
-      margin: 5px; padding: 5px 10px; font-size: 16px; cursor: pointer;
+      margin: 5px;
+      padding: 5px 10px;
+      font-size: 16px;
+      cursor: pointer;
     }
-    .tank { stroke: black; stroke-width: 2; }
   </style>
 </head>
 <body>
@@ -31,64 +59,72 @@
     <button id="pumpToggle">Pump: OFF</button>
     <button id="resetValves">Reset Valves</button>
   </div>
-  <svg viewBox="0 0 800 500" width="95%" height="600">
+  <svg viewBox="0 0 600 400" width="90%" height="500">
+    <!-- Labels -->
     <text x="100" y="20" class="label">From</text>
-    <text x="100" y="460" class="label">Suction</text>
-    <text x="700" y="20" class="label">To</text>
-    <text x="700" y="460" class="label">Return</text>
+    <text x="100" y="360" class="label">Suction</text>
+    <text x="500" y="20" class="label">To</text>
+    <text x="500" y="360" class="label">Return</text>
 
-    <circle id="pump" cx="400" cy="200" r="30" fill="gray" />
-    <text x="400" y="205" class="label">Pump</text>
+    <!-- Pump -->
+    <circle id="pump" cx="300" cy="180" r="30" fill="gray" />
+    <text x="300" y="185" class="label">Pump</text>
 
-    <line id="line-s1" class="flow-line" x1="180" y1="60" x2="400" y2="200" />
-    <line id="line-s2" class="flow-line" x1="180" y1="120" x2="400" y2="200" />
-    <line id="line-s3" class="flow-line" x1="180" y1="180" x2="400" y2="200" />
-    <line id="line-s4" class="flow-line" x1="180" y1="240" x2="400" y2="200" />
-    <line id="line-r1" class="flow-line" x1="400" y1="200" x2="620" y2="60" />
-    <line id="line-r2" class="flow-line" x1="400" y1="200" x2="620" y2="120" />
-    <line id="line-r3" class="flow-line" x1="400" y1="200" x2="620" y2="180" />
-    <line id="line-r4" class="flow-line" x1="400" y1="200" x2="620" y2="240" />
+    <!-- Flow lines (Suction to Pump) -->
+    <line id="line-s1" class="flow-line" x1="140" y1="60" x2="300" y2="180" />
+    <line id="line-s2" class="flow-line" x1="140" y1="120" x2="300" y2="180" />
+    <line id="line-s3" class="flow-line" x1="140" y1="180" x2="300" y2="180" />
+    <line id="line-s4" class="flow-line" x1="140" y1="240" x2="300" y2="180" />
 
-    <line class="flow-line" x1="180" y1="60" x2="100" y2="350" />
-    <line class="flow-line" x1="180" y1="120" x2="250" y2="350" />
-    <line class="flow-line" x1="620" y1="180" x2="550" y2="350" />
-    <line class="flow-line" x1="620" y1="240" x2="700" y2="350" />
+    <!-- Flow lines (Pump to Return) -->
+    <line id="line-r1" class="flow-line" x1="300" y1="180" x2="460" y2="60" />
+    <line id="line-r2" class="flow-line" x1="300" y1="180" x2="460" y2="120" />
+    <line id="line-r3" class="flow-line" x1="300" y1="180" x2="460" y2="180" />
+    <line id="line-r4" class="flow-line" x1="300" y1="180" x2="460" y2="240" />
 
-    <rect id="suction1" class="valve closed" x="160" y="50" width="30" height="30" />
-    <text x="175" y="72" class="label">1</text>
-    <rect id="suction2" class="valve closed" x="160" y="110" width="30" height="30" />
-    <text x="175" y="132" class="label">2</text>
-    <rect id="suction3" class="valve closed" x="160" y="170" width="30" height="30" />
-    <text x="175" y="192" class="label">3</text>
-    <rect id="suction4" class="valve closed" x="160" y="230" width="30" height="30" />
-    <text x="175" y="252" class="label">4</text>
+    <!-- Suction Valves (Left Side) -->
+    <rect id="suction1" class="valve closed" x="120" y="50" width="30" height="30" />
+    <text x="135" y="72" class="label">1</text>
 
-    <rect id="return1" class="valve closed" x="620" y="50" width="30" height="30" />
-    <text x="635" y="72" class="label">1</text>
-    <rect id="return2" class="valve closed" x="620" y="110" width="30" height="30" />
-    <text x="635" y="132" class="label">2</text>
-    <rect id="return3" class="valve closed" x="620" y="170" width="30" height="30" />
-    <text x="635" y="192" class="label">3</text>
-    <rect id="return4" class="valve closed" x="620" y="230" width="30" height="30" />
-    <text x="635" y="252" class="label">4</text>
+    <rect id="suction2" class="valve closed" x="120" y="110" width="30" height="30" />
+    <text x="135" y="132" class="label">2</text>
 
-    <circle class="tank" cx="100" cy="370" r="40" fill="green" />
-    <text x="100" y="375" class="label" fill="white">Tank 1</text>
-    <circle class="tank" cx="250" cy="370" r="40" fill="orange" />
-    <text x="250" y="375" class="label" fill="white">Tank 2</text>
-    <circle class="tank" cx="550" cy="370" r="40" fill="green" />
-    <text x="550" y="375" class="label" fill="white">Tank 3</text>
-    <circle class="tank" cx="700" cy="370" r="40" fill="green" />
-    <text x="700" y="375" class="label" fill="white">Tank 4</text>
+    <rect id="suction3" class="valve closed" x="120" y="170" width="30" height="30" />
+    <text x="135" y="192" class="label">3</text>
+
+    <rect id="suction4" class="valve closed" x="120" y="230" width="30" height="30" />
+    <text x="135" y="252" class="label">4</text>
+
+    <!-- Return Valves (Right Side) -->
+    <rect id="return1" class="valve closed" x="460" y="50" width="30" height="30" />
+    <text x="475" y="72" class="label">1</text>
+
+    <rect id="return2" class="valve closed" x="460" y="110" width="30" height="30" />
+    <text x="475" y="132" class="label">2</text>
+
+    <rect id="return3" class="valve closed" x="460" y="170" width="30" height="30" />
+    <text x="475" y="192" class="label">3</text>
+
+    <rect id="return4" class="valve closed" x="460" y="230" width="30" height="30" />
+    <text x="475" y="252" class="label">4</text>
   </svg>
+
   <script>
     let pumpOn = false;
     const pumpButton = document.getElementById('pumpToggle');
     const resetButton = document.getElementById('resetValves');
+
     const valveToLine = {
-      suction1: "line-s1", suction2: "line-s2", suction3: "line-s3", suction4: "line-s4",
-      return1: "line-r1", return2: "line-r2", return3: "line-r3", return4: "line-r4"
+      suction1: "line-s1",
+      suction2: "line-s2",
+      suction3: "line-s3",
+      suction4: "line-s4",
+      return1: "line-r1",
+      return2: "line-r2",
+      return3: "line-r3",
+      return4: "line-r4",
     };
+
     function updateFlow() {
       document.querySelectorAll('.valve').forEach(valve => {
         const lineId = valveToLine[valve.id];
@@ -102,6 +138,7 @@
         }
       });
     }
+
     document.querySelectorAll('.valve').forEach(valve => {
       valve.addEventListener('click', () => {
         valve.classList.toggle('open');
@@ -109,12 +146,14 @@
         updateFlow();
       });
     });
+
     pumpButton.addEventListener('click', () => {
       pumpOn = !pumpOn;
       pumpButton.innerText = pumpOn ? 'Pump: ON' : 'Pump: OFF';
       document.getElementById('pump').setAttribute('fill', pumpOn ? 'orange' : 'gray');
       updateFlow();
     });
+
     resetButton.addEventListener('click', () => {
       document.querySelectorAll('.valve').forEach(valve => {
         valve.classList.remove('open');
