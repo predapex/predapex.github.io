@@ -31,7 +31,25 @@
     .pipe {
       stroke-width: 6;
     }
-  </style>
+  
+@keyframes flow {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+.flow-line {
+  stroke: lightblue;
+  stroke-width: 4;
+  stroke-dasharray: 6;
+  stroke-dashoffset: 0;
+  opacity: 0.2;
+  transition: opacity 0.3s;
+}
+.flow-active {
+  opacity: 1;
+  animation: flow 1s linear infinite;
+}
+</style>
 </head>
 <body>
 <h2 style="text-align: center;">Interactive Pump Diagram</h2>
@@ -59,20 +77,20 @@
 <rect class="valve closed" height="30" id="to3" onclick="toggleValve('to3')" width="30" x="630" y="200"></rect>
 <rect class="valve closed" height="30" id="to4" onclick="toggleValve('to4')" width="30" x="630" y="250"></rect>
 <!-- Manifolds BETWEEN pump and valves -->
-<line class="manifold" x1="200" x2="200" y1="115" y2="265"></line>
-<line class="manifold" x1="600" x2="600" y1="115" y2="265"></line>
+<line class="manifold" stroke="#ccc" x1="200" x2="200" y1="115" y2="265"></line>
+<line class="manifold" stroke="#ccc" x1="600" x2="600" y1="115" y2="265"></line>
 <!-- Pipes from valves to manifold -->
-<line class="pipe" x1="170" x2="200" y1="115" y2="115"></line>
-<line class="pipe" x1="170" x2="200" y1="165" y2="165"></line>
-<line class="pipe" x1="170" x2="200" y1="215" y2="215"></line>
-<line class="pipe" x1="170" x2="200" y1="265" y2="265"></line>
-<line class="pipe" x1="630" x2="600" y1="115" y2="115"></line>
-<line class="pipe" x1="630" x2="600" y1="165" y2="165"></line>
-<line class="pipe" x1="630" x2="600" y1="215" y2="215"></line>
-<line class="pipe" x1="630" x2="600" y1="265" y2="265"></line>
+<line class="pipe" stroke="#ccc" x1="170" x2="200" y1="115" y2="115"></line>
+<line class="pipe" stroke="#ccc" x1="170" x2="200" y1="165" y2="165"></line>
+<line class="pipe" stroke="#ccc" x1="170" x2="200" y1="215" y2="215"></line>
+<line class="pipe" stroke="#ccc" x1="170" x2="200" y1="265" y2="265"></line>
+<line class="pipe" stroke="#ccc" x1="630" x2="600" y1="115" y2="115"></line>
+<line class="pipe" stroke="#ccc" x1="630" x2="600" y1="165" y2="165"></line>
+<line class="pipe" stroke="#ccc" x1="630" x2="600" y1="215" y2="215"></line>
+<line class="pipe" stroke="#ccc" x1="630" x2="600" y1="265" y2="265"></line>
 <!-- Pipes from manifold to pump -->
-<line class="pipe" x1="200" x2="370" y1="190" y2="200"></line>
-<line class="pipe" x1="600" x2="430" y1="190" y2="200"></line>
+<line class="pipe" stroke="#ccc" x1="200" x2="370" y1="190" y2="200"></line>
+<line class="pipe" stroke="#ccc" x1="600" x2="430" y1="190" y2="200"></line>
 <text class="label" x="155" y="120">1</text><text class="label" x="155" y="170">2</text><text class="label" x="155" y="220">3</text><text class="label" x="155" y="270">4</text><text class="label" x="645" y="120">1</text><text class="label" x="645" y="170">2</text><text class="label" x="645" y="220">3</text><text class="label" x="645" y="270">4</text></svg>
 <script>
     let pumpOn = false;
