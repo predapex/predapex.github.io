@@ -1,11 +1,11 @@
-interactive_tank_pump_with_mapped_flows.html
+fixed_interactive_tank_pump.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Interactive Tank-Pump System</title>
 <style>
-  body { font-family: sans-serif; text-align: center; margin: 0; padding: 0; }
+  body { font-family: sans-serif; text-align: center; margin: 0; padding: 0; background: #f9f9f9; }
   button { margin: 12px 6px; padding: 8px 18px; font-size: 18px; border-radius: 8px; border: none; background: #e5e9f0; color: #036; cursor: pointer; }
   button:hover { background: #d8dee9; }
   svg { user-select: none; }
@@ -14,11 +14,11 @@ interactive_tank_pump_with_mapped_flows.html
   .pump { fill: #666; stroke: #444; stroke-width: 2; }
 
   .valve { cursor: pointer; }
-  .valve.closed { fill: #d00; }
-  .valve.open { fill: #0a0; }
-  .valve text { pointer-events: none; font-size: 20px; fill: #fff; font-weight: bold; }
+  .valve.closed rect { fill: #d00; }
+  .valve.open rect { fill: #0a0; }
+  .valve text { pointer-events: none; font-size: 18px; fill: #fff; font-weight: bold; }
 
-  .arrow { stroke: #777; stroke-width: 8; stroke-linecap: round; fill: none; }
+  .arrow { stroke: #777; stroke-width: 6; stroke-linecap: round; fill: none; }
   .arrowhead { fill: #777; }
 
   .flow-line { stroke: #39f; stroke-width: 6; stroke-dasharray: 6 10; stroke-dashoffset: 0; opacity: 0; }
@@ -54,17 +54,19 @@ const flowsGroup = document.getElementById('flows');
 positions.forEach((x, idx) => {
   const id = idx + 1;
 
-  // Top valves and plumbing
+  // Top valve
   createValve(x, 100, 'top', id);
   svg.appendChild(makePipe(x, 140, x, 100));
   svg.appendChild(makeArrow(x, 60, x, 95, true));
-  flowsGroup.appendChild(makeFlow(`flowTop${id}`, x, 140, x, 100));
-  flowsGroup.appendChild(makeFlow(`flowToPump${id}`, x, 100, 410, 250));
 
-  // Bottom valves and plumbing
+  // Bottom valve
   createValve(x, 440, 'bot', id);
   svg.appendChild(makePipe(x, 440, x, 480));
   svg.appendChild(makeArrow(x, 485, x, 520, false));
+
+  // Blue flow follows plumbing lines
+  flowsGroup.appendChild(makeFlow(`flowTop${id}`, x, 140, x, 100));
+  flowsGroup.appendChild(makeFlow(`flowToPump${id}`, x, 100, 410, 250));
   flowsGroup.appendChild(makeFlow(`flowFromPump${id}`, 410, 330, x, 440));
   flowsGroup.appendChild(makeFlow(`flowBot${id}`, x, 440, x, 480));
 });
@@ -88,7 +90,7 @@ function createValve(x, y, side, id) {
 
   const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   txt.setAttribute('x', x);
-  txt.setAttribute('y', y + 7);
+  txt.setAttribute('y', y + 6);
   txt.setAttribute('text-anchor', 'middle');
   txt.textContent = id;
   g.appendChild(txt);
@@ -116,7 +118,7 @@ function makeArrow(x1, y1, x2, y2, up) {
   group.appendChild(line);
 
   const tri = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-  const size = 12;
+  const size = 10;
   if (up) {
     tri.setAttribute('points', `${x2 - size},${y1 + size} ${x2 + size},${y1 + size} ${x2},${y1}`);
   } else {
