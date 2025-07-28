@@ -1,4 +1,4 @@
-interactive_tank_pump_aligned_flows.html
+interactive_tank_pump_no_fill_bug.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,7 +18,7 @@ interactive_tank_pump_aligned_flows.html
   .valve.open rect { fill:#0a0; }
   .valve text { pointer-events:none; font-size:16px; fill:#fff; font-weight:bold; }
 
-  .flow-line { stroke:blue; stroke-width:6; stroke-dasharray:12 8; stroke-dashoffset:0; opacity:0; transition:opacity 0.2s; }
+  .flow-line { stroke:blue; stroke-width:6; stroke-dasharray:12 8; stroke-dashoffset:0; opacity:0; fill:none; transition:opacity 0.2s; }
   .flow-line.active { opacity:1; animation:flowAnim 1s linear infinite; }
   @keyframes flowAnim { to { stroke-dashoffset:-20; } }
 </style>
@@ -72,6 +72,7 @@ interactive_tank_pump_aligned_flows.html
       path.setAttribute('d',d);
       path.setAttribute('id',`flow${id}`);
       path.setAttribute('class','flow-line');
+      path.setAttribute('fill','none');
       flowsGroup.appendChild(path);
     });
 
