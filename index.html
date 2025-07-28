@@ -16,7 +16,12 @@
   .flow{stroke:#39f;stroke-width:6;stroke-dasharray:12 8;stroke-dashoffset:0;opacity:0;fill:none;pointer-events:none}
   .flow.active{opacity:1;animation:dash 1s linear infinite}
   @keyframes dash{to{stroke-dashoffset:-20}}
-  .pipe-label { font-size:14px; fill:#444; font-weight:bold }
+  .pipe-label{
+    font-size:14px; fill:#444; font-weight:bold;
+    opacity:0; transition:opacity 0.3s;
+    pointer-events:none;
+  }
+  .pipe-label.visible{opacity:1}
 </style>
 </head>
 <body>
@@ -35,7 +40,7 @@
   <line class="pipe" x1="410" y1="200" x2="410" y2="300"/>
   <line class="pipe" x1="410" y1="380" x2="410" y2="460"/>
 
-  <!-- labels for pipe connections -->
+  <!-- labels group -->
   <g id="labels"></g>
 
   <!-- flow groups -->
@@ -47,79 +52,119 @@
 <script>
 const xs=[150,310,470,630];
 let openTop=new Set(), openBot=new Set(), pumpOn=false;
-const pumpState=document.getElementById('pumpState');
-const svg=document.querySelector('svg');
-const botG=document.getElementById('botFlows');
-const topG=document.getElementById('topFlows');
-const labelG=document.getElementById('labels');
 
+const pumpState=document.getElementById('pumpState'),
+      svg=document.querySelector('svg'),
+      botG=document.getElementById('botFlows'),
+      topG=document.getElementById('topFlows'),
+      labelG=document.getElementById('labels');
+
+// Build everything
 xs.forEach((x,i)=>{
   const id=i+1;
-
-  // Pipes
-  addPipe(x,120,x,160);  // Top extension
-  addPipe(x,160,x,200);  // Top stub
-  addPipe(x,500,x,460);  // Bottom stub
-  addPipe(x,500,x,600);  // Bottom extension
-
-  // Flow paths
+  // plumbing
+  addPipe(x,120,x,160); addPipe(x,160,x,200);
+  addPipe(x,500,x,460); addPipe(x,500,x,600);
+  // flows
   addFlow(botG,'b'+id,`M${x},600 V500 V460 H410 V380`);
   addFlow(topG,'t'+id,`M410,300 V200 H${x} V160 V120`);
-
-  // Valves
+  // valves
   addValve(x,160,'top',id);
   addValve(x,500,'bot',id);
-
-  // Labels
-  addLabel(x,110,'TO TANK');
-  addLabel(x,620,'FROM TANK');
+  // labels (initially hidden)
+  addLabel(x,110,'labelTop'+id,'TO TANK');
+  addLabel(x,620,'labelBot'+id,'FROM TANK');
 });
 
 function addPipe(x1,y1,x2,y2){
   const l=document.createElementNS('http://www.w3.org/2000/svg','line');
-  l.setAttribute('class','pipe'); l.setAttribute('x1',x1); l.setAttribute('y1',y1);
-  l.setAttribute('x2',x2); l.setAttribute('y2',y2); svg.appendChild(l);
+  l.setAttribute('class','pipe');
+  l.setAttribute('x1',x1); l.setAttribute('y1',y1);
+  l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+  svg.appendChild(l);
 }
 function addFlow(parent,id,d){
   const p=document.createElementNS('http://www.w3.org/2000/svg','path');
-  p.setAttribute('id',id); p.setAttribute('d',d); p.setAttribute('class','flow'); parent.appendChild(p);
+  p.setAttribute('id',id);
+  p.setAttribute('d',d);
+  p.setAttribute('class','flow');
+  parent.appendChild(p);
 }
 function addValve(x,y,side,id){
   const g=document.createElementNS('http://www.w3.org/2000/svg','g');
-  g.classList.add('valve','closed'); g.dataset.side=side; g.dataset.id=id; g.onclick=valveToggle;
+  g.classList.add('valve','closed');
+  g.dataset.side=side; g.dataset.id=id;
+  g.addEventListener('click',toggleValve);
   const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
-  r.setAttribute('x',x-20); r.setAttribute('y',y-20); r.setAttribute('width',40); r.setAttribute('height',40); r.setAttribute('rx',5);
+  r.setAttribute('x',x-20); r.setAttribute('y',y-20);
+  r.setAttribute('width',40); r.setAttribute('height',40); r.setAttribute('rx',5);
   const t=document.createElementNS('http://www.w3.org/2000/svg','text');
-  t.setAttribute('x',x);   t.setAttribute('y',y+6); t.setAttribute('text-anchor','middle'); t.textContent=id;
-  g.appendChild(r); g.appendChild(t); svg.appendChild(g);
+  t.setAttribute('x',x); t.setAttribute('y',y+6);
+  t.setAttribute('text-anchor','middle');
+  t.textContent=id;
+  g.appendChild(r); g.appendChild(t);
+  svg.appendChild(g);
 }
-function addLabel(x,y,text){
+function addLabel(x,y,id,text){
   const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
-  lbl.setAttribute('x',x); lbl.setAttribute('y',y);
-  lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('class','pipe-label');
+  lbl.setAttribute('id',id);
+  lbl.setAttribute('class','pipe-label');
+  lbl.setAttribute('x',x);
+  lbl.setAttribute('y',y);
+  lbl.setAttribute('text-anchor','middle');
   lbl.textContent=text;
   labelG.appendChild(lbl);
 }
 
-function valveToggle(e){
-  const side=e.currentTarget.dataset.side, id=+e.currentTarget.dataset.id;
-  const set=side==='top'?openTop:openBot;
-  if(set.has(id)){ set.delete(id); e.currentTarget.classList.replace('open','closed'); }
-  else          { set.add(id);    e.currentTarget.classList.replace('closed','open'); }
+// Interactivity
+function toggleValve(e){
+  const side=e.currentTarget.dataset.side,
+        id=+e.currentTarget.dataset.id,
+        set=side==='top'?openTop:openBot;
+  if(set.has(id)){
+    set.delete(id);
+    e.currentTarget.classList.replace('open','closed');
+  } else {
+    set.add(id);
+    e.currentTarget.classList.replace('closed','open');
+  }
   update();
 }
-function togglePump(){ pumpOn=!pumpOn; pumpState.textContent=pumpOn?'ON':'OFF'; update(); }
+function togglePump(){
+  pumpOn=!pumpOn;
+  pumpState.textContent=pumpOn?'ON':'OFF';
+  update();
+}
 function resetAll(){
-  document.querySelectorAll('.valve.open').forEach(v=>v.classList.replace('open','closed'));
-  openTop.clear(); openBot.clear(); pumpOn=false; pumpState.textContent='OFF'; update();
+  document.querySelectorAll('.valve.open')
+          .forEach(v=>v.classList.replace('open','closed'));
+  openTop.clear();
+  openBot.clear();
+  pumpOn=false;
+  pumpState.textContent='OFF';
+  update();
 }
 function update(){
-  const coreActive=pumpOn && openTop.size && openBot.size;
-  document.getElementById('pumpFlow').classList.toggle('active',coreActive);
+  // core pump flow
+  const coreActive = pumpOn && openTop.size>0 && openBot.size>0;
+  document.getElementById('pumpFlow')
+          .classList.toggle('active',coreActive);
+
   xs.forEach((_,i)=>{
     const id=i+1;
-    document.getElementById('b'+id).classList.toggle('active', pumpOn && openBot.has(id) && openTop.size);
-    document.getElementById('t'+id).classList.toggle('active', pumpOn && openTop.has(id) && openBot.size);
+    // each bottom valve → show its flow & its label
+    const botActive = pumpOn && openBot.has(id) && openTop.size>0;
+    document.getElementById('b'+id)
+            .classList.toggle('active',botActive);
+    document.getElementById('labelBot'+id)
+            .classList.toggle('visible', openBot.has(id));
+
+    // each top valve → show its flow & its label
+    const topActive = pumpOn && openTop.has(id) && openBot.size>0;
+    document.getElementById('t'+id)
+            .classList.toggle('active',topActive);
+    document.getElementById('labelTop'+id)
+            .classList.toggle('visible', openTop.has(id));
   });
 }
 </script>
