@@ -1,179 +1,258 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Water Tank System Interactive Diagram</title>
-  <style>
-    body { background: #f3f6fa; font-family: sans-serif; }
-    .diagram { margin: 30px auto; display: flex; flex-direction: column; align-items: center; }
-    .controls { margin: 20px 0; }
-    .valve-toggle, .pump-toggle { margin: 5px; }
-    .tank { fill: #b6d0e2; stroke: #4682b4; stroke-width: 3; }
-    .pump { fill: #ffd700; stroke: #b8860b; stroke-width: 3; }
-    .pipe { stroke: #888; stroke-width: 7; }
-    .valve { stroke: #333; stroke-width: 2; fill: #fff; }
-    .valve.open { fill: #4caf50; }
-    .valve.closed { fill: #f44336; }
-    .water { stroke: #2196f3; stroke-width: 7; stroke-dasharray: 15 10; animation: flow 1s linear infinite; }
-    .water.inactive { stroke: #bbb; }
-    @keyframes flow {
-      to { stroke-dashoffset: -25; }
-    }
-  </style>
-</head>
-<body>
-  <div class="diagram">
-    <svg id="diagram" width="800" height="500">
-      <!-- Tanks -->
-      <rect x="60"  y="100" width="80" height="180" rx="30" class="tank" id="tank0"/>
-      <rect x="60"  y="320" width="80" height="180" rx="30" class="tank" id="tank1"/>
-      <rect x="660" y="100" width="80" height="180" rx="30" class="tank" id="tank2"/>
-      <rect x="660" y="320" width="80" height="180" rx="30" class="tank" id="tank3"/>
+import React, { useState } from "react";
 
-      <!-- Pump -->
-      <ellipse cx="400" cy="250" rx="50" ry="50" class="pump" id="pump"/>
-      <text x="400" y="255" text-anchor="middle" font-size="18" fill="#333">PUMP</text>
+// Util: Given a valve open/close, returns a color for water animation
+const getWaterColor = (isOpen) => (isOpen ? "#33caff" : "#cccccc");
 
-      <!-- Pipes (suction) -->
-      <line x1="140" y1="130" x2="250" y2="130" class="pipe" id="pipe-suction-0"/>
-      <line x1="140" y1="410" x2="250" y2="410" class="pipe" id="pipe-suction-1"/>
-      <line x1="660" y1="130" x2="550" y2="130" class="pipe" id="pipe-suction-2"/>
-      <line x1="660" y1="410" x2="550" y2="410" class="pipe" id="pipe-suction-3"/>
-      <line x1="250" y1="130" x2="350" y2="170" class="pipe"/>
-      <line x1="250" y1="410" x2="350" y2="320" class="pipe"/>
-      <line x1="550" y1="130" x2="450" y2="170" class="pipe"/>
-      <line x1="550" y1="410" x2="450" y2="320" class="pipe"/>
-      <!-- To pump center -->
-      <line x1="350" y1="170" x2="400" y2="200" class="pipe"/>
-      <line x1="350" y1="320" x2="400" y2="300" class="pipe"/>
-      <line x1="450" y1="170" x2="400" y2="200" class="pipe"/>
-      <line x1="450" y1="320" x2="400" y2="300" class="pipe"/>
+// Layout positions
+const tankY = 80;
+const tankSpacing = 140;
+const pumpX = 350;
+const pumpY = 220;
+const valveRadius = 12;
 
-      <!-- Pipes (return) -->
-      <line x1="400" y1="200" x2="400" y2="300" class="pipe"/>
-      <line x1="400" y1="200" x2="350" y2="170" class="pipe"/>
-      <line x1="400" y1="300" x2="350" y2="320" class="pipe"/>
-      <line x1="400" y1="200" x2="450" y2="170" class="pipe"/>
-      <line x1="400" y1="300" x2="450" y2="320" class="pipe"/>
-      <!-- Return to tanks -->
-      <line x1="350" y1="170" x2="250" y2="130" class="pipe"/>
-      <line x1="350" y1="320" x2="250" y2="410" class="pipe"/>
-      <line x1="450" y1="170" x2="550" y2="130" class="pipe"/>
-      <line x1="450" y1="320" x2="550" y2="410" class="pipe"/>
-      <line x1="250" y1="130" x2="140" y2="130" class="pipe" id="pipe-return-0"/>
-      <line x1="250" y1="410" x2="140" y2="410" class="pipe" id="pipe-return-1"/>
-      <line x1="550" y1="130" x2="660" y2="130" class="pipe" id="pipe-return-2"/>
-      <line x1="550" y1="410" x2="660" y2="410" class="pipe" id="pipe-return-3"/>
-      
-      <!-- Valves (suction) -->
-      <circle cx="200" cy="130" r="12" class="valve closed" id="valve-suction-0"/>
-      <circle cx="200" cy="410" r="12" class="valve closed" id="valve-suction-1"/>
-      <circle cx="600" cy="130" r="12" class="valve closed" id="valve-suction-2"/>
-      <circle cx="600" cy="410" r="12" class="valve closed" id="valve-suction-3"/>
-      <!-- Valves (return) -->
-      <circle cx="200" cy="130" r="12" class="valve closed" id="valve-return-0"/>
-      <circle cx="200" cy="410" r="12" class="valve closed" id="valve-return-1"/>
-      <circle cx="600" cy="130" r="12" class="valve closed" id="valve-return-2"/>
-      <circle cx="600" cy="410" r="12" class="valve closed" id="valve-return-3"/>
+const tankNames = ["T1", "T2", "T3", "T4"];
 
-      <!-- Water Animation (suction) -->
-      <line x1="140" y1="130" x2="250" y2="130" class="water inactive" id="water-suction-0"/>
-      <line x1="140" y1="410" x2="250" y2="410" class="water inactive" id="water-suction-1"/>
-      <line x1="660" y1="130" x2="550" y2="130" class="water inactive" id="water-suction-2"/>
-      <line x1="660" y1="410" x2="550" y2="410" class="water inactive" id="water-suction-3"/>
-      <!-- Water Animation (return) -->
-      <line x1="250" y1="130" x2="140" y2="130" class="water inactive" id="water-return-0"/>
-      <line x1="250" y1="410" x2="140" y2="410" class="water inactive" id="water-return-1"/>
-      <line x1="550" y1="130" x2="660" y2="130" class="water inactive" id="water-return-2"/>
-      <line x1="550" y1="410" x2="660" y2="410" class="water inactive" id="water-return-3"/>
-    </svg>
+export default function WaterTankSystem() {
+  // State: [false, false, false, false]
+  const [suctionValves, setSuctionValves] = useState([false, false, false, false]);
+  const [returnValves, setReturnValves] = useState([false, false, false, false]);
+  const [pumpOn, setPumpOn] = useState(false);
 
-    <div class="controls">
-      <button id="pump-toggle" class="pump-toggle">Pump: OFF</button>
-      <br>
-      <div>
-        <span>Suction Valves:</span>
-        <button class="valve-toggle" data-manifold="suction" data-idx="0">Tank 1</button>
-        <button class="valve-toggle" data-manifold="suction" data-idx="1">Tank 2</button>
-        <button class="valve-toggle" data-manifold="suction" data-idx="2">Tank 3</button>
-        <button class="valve-toggle" data-manifold="suction" data-idx="3">Tank 4</button>
-      </div>
-      <div>
-        <span>Return Valves:</span>
-        <button class="valve-toggle" data-manifold="return" data-idx="0">Tank 1</button>
-        <button class="valve-toggle" data-manifold="return" data-idx="1">Tank 2</button>
-        <button class="valve-toggle" data-manifold="return" data-idx="2">Tank 3</button>
-        <button class="valve-toggle" data-manifold="return" data-idx="3">Tank 4</button>
-      </div>
-    </div>
-  </div>
-  <script>
-    // State
-    let pumpOn = false;
-    let valves = {
-      suction: [false, false, false, false], // false = closed, true = open
-      return: [false, false, false, false]
-    };
+  // Toggle helpers
+  const togglePump = () => setPumpOn((p) => !p);
+  const toggleSuction = (i) => setSuctionValves((v) => v.map((val, idx) => (idx === i ? !val : val)));
+  const toggleReturn = (i) => setReturnValves((v) => v.map((val, idx) => (idx === i ? !val : val)));
 
-    // Elements
-    const pumpToggle = document.getElementById('pump-toggle');
-    const valveToggles = document.querySelectorAll('.valve-toggle');
-
-    // Update valve visuals
-    function updateValves() {
-      for (let m of ['suction','return']) {
-        for (let i=0;i<4;i++) {
-          const el = document.getElementById(`valve-${m}-${i}`);
-          if (!el) continue;
-          el.classList.remove('open','closed');
-          el.classList.add(valves[m][i] ? 'open' : 'closed');
+  // For animation: Find which tanks are sending/receiving water
+  const activeFlows = [];
+  if (pumpOn) {
+    suctionValves.forEach((sOpen, i) => {
+      returnValves.forEach((rOpen, j) => {
+        if (sOpen && rOpen) {
+          activeFlows.push({ from: i, to: j });
         }
-      }
-    }
-
-    // Update water animation
-    function updateWater() {
-      for (let i=0;i<4;i++) {
-        // Suction: tank → pump
-        let el1 = document.getElementById(`water-suction-${i}`);
-        // Return: pump → tank
-        let el2 = document.getElementById(`water-return-${i}`);
-        let active = pumpOn && valves.suction[i] && valves.return[i];
-        [el1,el2].forEach(el => {
-          if (el) {
-            el.classList.toggle('inactive', !active);
-          }
-        });
-      }
-    }
-
-    // Update pump button
-    function updatePump() {
-      pumpToggle.textContent = `Pump: ${pumpOn ? 'ON' : 'OFF'}`;
-      document.getElementById('pump').style.fill = pumpOn ? '#4caf50' : '#ffd700';
-    }
-
-    // Initial render
-    updateValves();
-    updateWater();
-    updatePump();
-
-    // Event listeners
-    pumpToggle.addEventListener('click', () => {
-      pumpOn = !pumpOn;
-      updatePump();
-      updateWater();
-    });
-
-    valveToggles.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const m = btn.dataset.manifold;
-        const idx = +btn.dataset.idx;
-        valves[m][idx] = !valves[m][idx];
-        updateValves();
-        updateWater();
       });
     });
-  </script>
-</body>
-</html>
+  }
+
+  return (
+    <div style={{ userSelect: "none" }}>
+      <svg width={700} height={400}>
+        {/* Tanks */}
+        {tankNames.map((name, i) => (
+          <g key={name}>
+            {/* Tank */}
+            <rect
+              x={i * tankSpacing + 50}
+              y={tankY}
+              width={60}
+              height={100}
+              fill="#b3e0ff"
+              stroke="#333"
+              strokeWidth={2}
+              rx={10}
+            />
+            {/* Tank Label */}
+            <text
+              x={i * tankSpacing + 80}
+              y={tankY + 120}
+              textAnchor="middle"
+              fontWeight="bold"
+              fontSize={16}
+            >
+              {name}
+            </text>
+          </g>
+        ))}
+
+        {/* Pump */}
+        <g>
+          <ellipse
+            cx={pumpX}
+            cy={pumpY}
+            rx={36}
+            ry={28}
+            fill={pumpOn ? "#b3ffb3" : "#dddddd"}
+            stroke="#333"
+            strokeWidth={3}
+          />
+          <text
+            x={pumpX}
+            y={pumpY + 5}
+            textAnchor="middle"
+            fontWeight="bold"
+            fontSize={18}
+            fill="#333"
+          >
+            PUMP
+          </text>
+        </g>
+
+        {/* Suction Manifold lines & valves */}
+        {tankNames.map((_, i) => {
+          const x = i * tankSpacing + 80;
+          // Valve position
+          const valveX = x;
+          const valveY = tankY + 100 + 20;
+          // Pipe from tank to valve
+          return (
+            <g key={`suction_${i}`}>
+              {/* From tank bottom to valve */}
+              <line
+                x1={x}
+                y1={tankY + 100}
+                x2={x}
+                y2={valveY}
+                stroke="#444"
+                strokeWidth={5}
+              />
+              {/* Valve */}
+              <circle
+                cx={valveX}
+                cy={valveY + valveRadius + 5}
+                r={valveRadius}
+                fill={suctionValves[i] ? "#33caff" : "#fff"}
+                stroke="#444"
+                strokeWidth={2}
+                style={{ cursor: "pointer" }}
+                onClick={() => toggleSuction(i)}
+              />
+              <text x={valveX} y={valveY + valveRadius + 30} fontSize={10} textAnchor="middle">
+                S
+              </text>
+              {/* From valve to pump */}
+              <line
+                x1={valveX}
+                y1={valveY + 2 * valveRadius + 10}
+                x2={pumpX - 10}
+                y2={pumpY - 28}
+                stroke={getWaterColor(suctionValves[i] && pumpOn)}
+                strokeWidth={5}
+                markerEnd={suctionValves[i] && pumpOn ? "url(#arrowhead)" : undefined}
+                style={{
+                  transition: "stroke 0.3s"
+                }}
+              />
+            </g>
+          );
+        })}
+
+        {/* Return Manifold lines & valves */}
+        {tankNames.map((_, i) => {
+          const x = i * tankSpacing + 80;
+          // Valve position
+          const valveX = x;
+          const valveY = pumpY + 28 + 30;
+          // From pump to valve
+          return (
+            <g key={`return_${i}`}>
+              <line
+                x1={pumpX + 10}
+                y1={pumpY + 28}
+                x2={valveX}
+                y2={valveY}
+                stroke={getWaterColor(returnValves[i] && pumpOn)}
+                strokeWidth={5}
+                markerEnd={returnValves[i] && pumpOn ? "url(#arrowhead)" : undefined}
+                style={{
+                  transition: "stroke 0.3s"
+                }}
+              />
+              {/* Valve */}
+              <circle
+                cx={valveX}
+                cy={valveY}
+                r={valveRadius}
+                fill={returnValves[i] ? "#33caff" : "#fff"}
+                stroke="#444"
+                strokeWidth={2}
+                style={{ cursor: "pointer" }}
+                onClick={() => toggleReturn(i)}
+              />
+              <text x={valveX} y={valveY + 22} fontSize={10} textAnchor="middle">
+                R
+              </text>
+              {/* From valve to tank */}
+              <line
+                x1={valveX}
+                y1={valveY + valveRadius}
+                x2={valveX}
+                y2={tankY + 100}
+                stroke="#444"
+                strokeWidth={5}
+              />
+            </g>
+          );
+        })}
+
+        {/* Animate active flows */}
+        {activeFlows.map(({ from, to }, idx) => {
+          // Animate water from tank 'from' through pump to tank 'to'
+          // Draw a blue line from left tank 'from' to pump, then to right tank 'to'
+          const xFrom = from * tankSpacing + 80;
+          const xTo = to * tankSpacing + 80;
+          const path = `M ${xFrom} ${tankY + 100}
+            L ${xFrom} ${tankY + 100 + 20 + 2 * valveRadius + 10}
+            L ${pumpX - 10} ${pumpY - 28}
+            L ${pumpX + 10} ${pumpY + 28}
+            L ${xTo} ${pumpY + 28 + 30}
+            L ${xTo} ${tankY + 100}`;
+          return (
+            <path
+              key={idx}
+              d={path}
+              stroke="#33caff"
+              strokeWidth={7}
+              fill="none"
+              opacity={0.7}
+              style={{
+                filter: "drop-shadow(0px 0px 6px #33caff)",
+                strokeDasharray: 40,
+                strokeDashoffset: (Date.now() / 50) % 40
+              }}
+            />
+          );
+        })}
+
+        {/* Arrow marker for flow */}
+        <defs>
+          <marker
+            id="arrowhead"
+            markerWidth="10"
+            markerHeight="7"
+            refX="8"
+            refY="3.5"
+            orient="auto"
+            markerUnits="strokeWidth"
+          >
+            <polygon points="0 0, 10 3.5, 0 7" fill="#33caff" />
+          </marker>
+        </defs>
+      </svg>
+      {/* Pump toggle button */}
+      <div style={{ textAlign: "center", marginTop: 10 }}>
+        <button
+          onClick={togglePump}
+          style={{
+            fontSize: 20,
+            padding: "10px 30px",
+            background: pumpOn ? "#b3ffb3" : "#eee",
+            border: "2px solid #333",
+            borderRadius: 10,
+            marginTop: 10
+          }}
+        >
+          {pumpOn ? "Stop Pump" : "Start Pump"}
+        </button>
+      </div>
+      {/* Valve legend */}
+      <div style={{ textAlign: "center", marginTop: 5, fontSize: 14 }}>
+        <span style={{ color: "#33caff", marginRight: 10 }}>●</span> Open Valve
+        <span style={{ color: "#fff", border: "1px solid #444", marginLeft: 20, marginRight: 10 }}>●</span> Closed Valve
+      </div>
+      <div style={{ textAlign: "center", marginTop: 5, fontSize: 14 }}>
+        Click on blue/white circles to open or close valves.
+      </div>
+    </div>
+  );
+}
