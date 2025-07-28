@@ -1,33 +1,29 @@
-interactive_tank_pump_system.html
+interactive_tank_pump_with_mapped_flows.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Interactive Tank-Pump System</title>
 <style>
-  body{font-family:sans-serif;text-align:center;margin:0;padding:0}
-  button{margin:12px 6px;padding:8px 18px;font-size:18px;border-radius:8px;border:none;background:#e5e9f0;color:#036;cursor:pointer}
-  button:hover{background:#d8dee9}
-  svg{user-select:none}
+  body { font-family: sans-serif; text-align: center; margin: 0; padding: 0; }
+  button { margin: 12px 6px; padding: 8px 18px; font-size: 18px; border-radius: 8px; border: none; background: #e5e9f0; color: #036; cursor: pointer; }
+  button:hover { background: #d8dee9; }
+  svg { user-select: none; }
 
-  /* pipes & pump */
-  .pipe{stroke:#777;stroke-width:10;stroke-linecap:round;fill:none}
-  .pump{fill:#666;stroke:#444;stroke-width:2}
+  .pipe { stroke: #777; stroke-width: 10; stroke-linecap: round; fill: none; }
+  .pump { fill: #666; stroke: #444; stroke-width: 2; }
 
-  /* valves */
-  .valve{cursor:pointer}
-  .valve.closed{fill:#d00}
-  .valve.open{fill:#0a0}
-  .valve text{pointer-events:none;font-size:20px;fill:#fff;font-weight:bold}
+  .valve { cursor: pointer; }
+  .valve.closed { fill: #d00; }
+  .valve.open { fill: #0a0; }
+  .valve text { pointer-events: none; font-size: 20px; fill: #fff; font-weight: bold; }
 
-  /* arrows */
-  .arrow{stroke:#777;stroke-width:8;stroke-linecap:round;fill:none}
-  .arrowhead{fill:#777}
+  .arrow { stroke: #777; stroke-width: 8; stroke-linecap: round; fill: none; }
+  .arrowhead { fill: #777; }
 
-  /* flow animation */
-  .flow-line{stroke:#39f;stroke-width:6;stroke-dasharray:6 10;stroke-dashoffset:0;opacity:0}
-  .flow-line.active{opacity:1;animation:dash 0.7s linear infinite}
-  @keyframes dash{to{stroke-dashoffset:-32}}
+  .flow-line { stroke: #39f; stroke-width: 6; stroke-dasharray: 6 10; stroke-dashoffset: 0; opacity: 0; }
+  .flow-line.active { opacity: 1; animation: dash 0.7s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -32; } }
 </style>
 </head>
 <body>
@@ -37,148 +33,150 @@ interactive_tank_pump_system.html
 <button onclick="resetAll()">Reset Valves</button>
 
 <svg width="820" height="600">
-
-  <!-- TOP (return) manifold -->
   <line class="pipe" x1="90" y1="140" x2="730" y2="140"/>
-  <!-- bottom (suction) manifold -->
   <line class="pipe" x1="90" y1="440" x2="730" y2="440"/>
-
-  <!-- pump block -->
-  <rect id="pumpBody" class="pump" x="310" y="250" rx="20" ry="20" width="200" height="80"/>
+  <rect class="pump" x="310" y="250" rx="20" ry="20" width="200" height="80"/>
   <text x="410" y="300" text-anchor="middle" font-size="26" fill="#fff">Pump</text>
-
-  <!-- vertical pipes to pump -->
   <line class="pipe" x1="410" y1="140" x2="410" y2="250"/>
   <line class="pipe" x1="410" y1="330" x2="410" y2="440"/>
-
-  <!-- valve groups generated below with JS -->
-
-  <!-- flow lines (suction to pump) -->
   <g id="flows"></g>
-
 </svg>
 
 <script>
-const pumpStateEl=document.getElementById('pumpState');
-let pumpOn=false;
+const pumpStateEl = document.getElementById('pumpState');
+let pumpOn = false;
 
-/* valve data */
-const positions=[
-  {id:1,x:150},
-  {id:2,x:310},
-  {id:3,x:470},
-  {id:4,x:630}
-];
-const openValves={top:new Set(),bot:new Set()};
+const positions = [150, 310, 470, 630];
+const openValves = { top: new Set(), bot: new Set() };
+const svg = document.querySelector('svg');
+const flowsGroup = document.getElementById('flows');
 
-const svg=document.querySelector('svg');
-const flowsGroup=document.getElementById('flows');
+positions.forEach((x, idx) => {
+  const id = idx + 1;
 
-/* create valves, arrows, branch pipes, flow lines */
-positions.forEach(pos=>{
-  // --- TOP manifold valves ---
-  const vTop=makeValve(pos.x,100,'top',pos.id);
-  svg.appendChild(vTop);
-  svg.appendChild(makePipe(pos.x,140,pos.x,100));
-  svg.appendChild(makeArrow(pos.x,60,pos.x,95,true));
+  // Top valves and plumbing
+  createValve(x, 100, 'top', id);
+  svg.appendChild(makePipe(x, 140, x, 100));
+  svg.appendChild(makeArrow(x, 60, x, 95, true));
+  flowsGroup.appendChild(makeFlow(`flowTop${id}`, x, 140, x, 100));
+  flowsGroup.appendChild(makeFlow(`flowToPump${id}`, x, 100, 410, 250));
 
-  // --- BOTTOM manifold valves ---
-  const vBot=makeValve(pos.x,440,'bot',pos.id);
-  svg.appendChild(vBot);
-  svg.appendChild(makePipe(pos.x,440,pos.x,480));
-  svg.appendChild(makeArrow(pos.x,485,pos.x,520,false));
-
-  // flow lines (two segments per tank)
-  flowsGroup.appendChild(makeFlow(`flowTop${pos.id}`,pos.x,140,410,250));
-  flowsGroup.appendChild(makeFlow(`flowBot${pos.id}`,410,330,pos.x,440));
+  // Bottom valves and plumbing
+  createValve(x, 440, 'bot', id);
+  svg.appendChild(makePipe(x, 440, x, 480));
+  svg.appendChild(makeArrow(x, 485, x, 520, false));
+  flowsGroup.appendChild(makeFlow(`flowFromPump${id}`, 410, 330, x, 440));
+  flowsGroup.appendChild(makeFlow(`flowBot${id}`, x, 440, x, 480));
 });
 
-/* helpers */
-function makeValve(x,y,side,id){
-  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
-  g.setAttribute('class','valve closed');
-  g.setAttribute('id',`${side}${id}`);
-  g.setAttribute('data-side',side);
-  g.setAttribute('data-id',id);
-  g.addEventListener('click',toggleValve);
+function createValve(x, y, side, id) {
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('class', 'valve closed');
+  g.setAttribute('id', `${side}${id}`);
+  g.setAttribute('data-side', side);
+  g.setAttribute('data-id', id);
+  g.addEventListener('click', toggleValve);
 
-  const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
-  rect.setAttribute('x',x-20);rect.setAttribute('y',y-20);
-  rect.setAttribute('width',40);rect.setAttribute('height',40);
-  rect.setAttribute('rx',5);rect.setAttribute('ry',5);
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x - 20);
+  rect.setAttribute('y', y - 20);
+  rect.setAttribute('width', 40);
+  rect.setAttribute('height', 40);
+  rect.setAttribute('rx', 5);
+  rect.setAttribute('ry', 5);
   g.appendChild(rect);
 
-  const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
-  txt.setAttribute('x',x);txt.setAttribute('y',y+7);
-  txt.setAttribute('text-anchor','middle');
-  txt.textContent=id;
+  const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  txt.setAttribute('x', x);
+  txt.setAttribute('y', y + 7);
+  txt.setAttribute('text-anchor', 'middle');
+  txt.textContent = id;
   g.appendChild(txt);
-  return g;
+  svg.appendChild(g);
 }
-function makePipe(x1,y1,x2,y2){
-  const p=document.createElementNS('http://www.w3.org/2000/svg','line');
-  p.setAttribute('class','pipe');
-  p.setAttribute('x1',x1);p.setAttribute('y1',y1);
-  p.setAttribute('x2',x2);p.setAttribute('y2',y2);
-  return p;
-}
-function makeArrow(x1,y1,x2,y2,up){
-  const group=document.createElementNS('http://www.w3.org/2000/svg','g');
-  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
-  line.setAttribute('class','arrow');
-  line.setAttribute('x1',x1);line.setAttribute('y1',y1);
-  line.setAttribute('x2',x2);line.setAttribute('y2',y2);
-  group.appendChild(line);
-  const tri=document.createElementNS('http://www.w3.org/2000/svg','polygon');
-  const size=12;
-  if(up){
-    tri.setAttribute('points',`${x2-size},${y1+size} ${x2+size},${y1+size} ${x2},${y1}`);
-  }else{
-    tri.setAttribute('points',`${x2-size},${y2-size} ${x2+size},${y2-size} ${x2},${y2}`);
-  }
-  tri.setAttribute('class','arrowhead');
-  group.appendChild(tri);
-  return group;
-}
-function makeFlow(id,x1,y1,x2,y2){
-  const l=document.createElementNS('http://www.w3.org/2000/svg','line');
-  l.setAttribute('id',id);
-  l.setAttribute('class','flow-line');
-  l.setAttribute('x1',x1);l.setAttribute('y1',y1);
-  l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+
+function makePipe(x1, y1, x2, y2) {
+  const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  l.setAttribute('class', 'pipe');
+  l.setAttribute('x1', x1);
+  l.setAttribute('y1', y1);
+  l.setAttribute('x2', x2);
+  l.setAttribute('y2', y2);
   return l;
 }
 
-/* interaction */
-function toggleValve(evt){
-  const g=evt.currentTarget;
-  const side=g.dataset.side==='top'?'top':'bot';
-  const id=parseInt(g.dataset.id);
-  if(g.classList.contains('open')){
-    g.classList.remove('open');g.classList.add('closed');
+function makeArrow(x1, y1, x2, y2, up) {
+  const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('class', 'arrow');
+  line.setAttribute('x1', x1);
+  line.setAttribute('y1', y1);
+  line.setAttribute('x2', x2);
+  line.setAttribute('y2', y2);
+  group.appendChild(line);
+
+  const tri = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  const size = 12;
+  if (up) {
+    tri.setAttribute('points', `${x2 - size},${y1 + size} ${x2 + size},${y1 + size} ${x2},${y1}`);
+  } else {
+    tri.setAttribute('points', `${x2 - size},${y2 - size} ${x2 + size},${y2 - size} ${x2},${y2}`);
+  }
+  tri.setAttribute('class', 'arrowhead');
+  group.appendChild(tri);
+  return group;
+}
+
+function makeFlow(id, x1, y1, x2, y2) {
+  const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  l.setAttribute('id', id);
+  l.setAttribute('class', 'flow-line');
+  l.setAttribute('x1', x1);
+  l.setAttribute('y1', y1);
+  l.setAttribute('x2', x2);
+  l.setAttribute('y2', y2);
+  return l;
+}
+
+function toggleValve(evt) {
+  const g = evt.currentTarget;
+  const side = g.dataset.side;
+  const id = parseInt(g.dataset.id);
+  if (g.classList.contains('open')) {
+    g.classList.remove('open');
+    g.classList.add('closed');
     openValves[side].delete(id);
-  }else{
-    g.classList.add('open');g.classList.remove('closed');
+  } else {
+    g.classList.add('open');
+    g.classList.remove('closed');
     openValves[side].add(id);
   }
   updateFlows();
 }
-function togglePump(){
-  pumpOn=!pumpOn;
-  pumpStateEl.textContent=pumpOn?'ON':'OFF';
+
+function togglePump() {
+  pumpOn = !pumpOn;
+  pumpStateEl.textContent = pumpOn ? 'ON' : 'OFF';
   updateFlows();
 }
-function resetAll(){
-  document.querySelectorAll('.valve.open').forEach(v=>v.classList.replace('open','closed'));
-  openValves.top.clear();openValves.bot.clear();
-  pumpOn=false;pumpStateEl.textContent='OFF';
+
+function resetAll() {
+  document.querySelectorAll('.valve.open').forEach(v => v.classList.replace('open', 'closed'));
+  openValves.top.clear();
+  openValves.bot.clear();
+  pumpOn = false;
+  pumpStateEl.textContent = 'OFF';
   updateFlows();
 }
-function updateFlows(){
-  positions.forEach(({id})=>{
-    const active=pumpOn&&openValves.top.has(id)&&openValves.bot.has(id);
-    document.getElementById(`flowTop${id}`).classList.toggle('active',active);
-    document.getElementById(`flowBot${id}`).classList.toggle('active',active);
+
+function updateFlows() {
+  positions.forEach((x, idx) => {
+    const id = idx + 1;
+    const active = pumpOn && openValves.top.has(id) && openValves.bot.has(id);
+    ['flowTop', 'flowToPump', 'flowFromPump', 'flowBot'].forEach(flow => {
+      const el = document.getElementById(`${flow}${id}`);
+      if (el) el.classList.toggle('active', active);
+    });
   });
 }
 </script>
