@@ -1,1 +1,103 @@
-# predapex.github.io
+interactive_water_tank_animation.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive Water Tank Animation</title>
+<style>
+  body { display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin-top: 20px; }
+  button { margin: 5px; padding: 8px 16px; font-size: 16px; cursor: pointer; }
+  svg { border: 1px solid #ccc; }
+  .pipe { stroke: #777; stroke-width: 8; fill: none; }
+  .tank-border { fill: none; stroke: #444; stroke-width: 4; }
+  .water { fill: #39f; }
+  .droplet { r: 5px; fill: #39f; opacity: 0; offset-rotate: 0deg; }
+  .droplet.inflow.path { offset-path: path('M100,20 L100,0'); }
+  .droplet.outflow.path { offset-path: path('M150,200 L180,200'); }
+  @keyframes moveIn { to { offset-distance: 100%; } }
+  @keyframes moveOut { to { offset-distance: 100%; } }
+  .inflow.active { opacity: 1; animation: moveIn 1s linear infinite; }
+  .outflow.active { opacity: 1; animation: moveOut 1s linear infinite; }
+</style>
+</head>
+<body>
+
+<h2>Water Tank Interactive Animation</h2>
+<button id="toggleIn">Toggle To Tank</button>
+<button id="toggleOut">Toggle From Tank</button>
+
+<svg width="300" height="300">
+  <!-- Tank -->
+  <rect x="50" y="20" width="100" height="200" class="tank-border" />
+  <!-- Water -->
+  <rect id="water" x="50" y="120" width="100" height="100" class="water" />
+
+  <!-- Inlet pipe -->
+  <line x1="100" y1="20" x2="100" y2="0" class="pipe" />
+  <text x="100" y="15" text-anchor="middle" font-size="12">TO TANK</text>
+  <circle id="dropIn" class="droplet inflow path" />
+
+  <!-- Outlet pipe -->
+  <line x1="150" y1="200" x2="180" y2="200" class="pipe" />
+  <text x="165" y="195" text-anchor="middle" font-size="12">FROM TANK</text>
+  <circle id="dropOut" class="droplet outflow path" />
+</svg>
+
+<script>
+  const water = document.getElementById('water');
+  const btnIn = document.getElementById('toggleIn');
+  const btnOut = document.getElementById('toggleOut');
+  const dropIn = document.getElementById('dropIn');
+  const dropOut = document.getElementById('dropOut');
+
+  let inflow = false, outflow = false;
+  let inflowInterval, outflowInterval;
+  let level = 100; // initial water height
+
+  function updateWater() {
+    const max = 200, min = 10;
+    water.setAttribute('height', level);
+    water.setAttribute('y', 20 + (200 - level));
+  }
+
+  btnIn.onclick = () => {
+    inflow = !inflow;
+    dropIn.classList.toggle('active', inflow);
+    clearInterval(inflowInterval);
+    if (inflow) {
+      inflowInterval = setInterval(() => {
+        if (level < max) {
+          level += 2;
+          if (level > max) level = max;
+          updateWater();
+        } else {
+          clearInterval(inflowInterval);
+        }
+      }, 100);
+    }
+  };
+
+  btnOut.onclick = () => {
+    outflow = !outflow;
+    dropOut.classList.toggle('active', outflow);
+    clearInterval(outflowInterval);
+    if (outflow) {
+      outflowInterval = setInterval(() => {
+        if (level > min) {
+          level -= 2;
+          if (level < min) level = min;
+          updateWater();
+        } else {
+          clearInterval(outflowInterval);
+        }
+      }, 100);
+    }
+  };
+
+  // Initialize paths for CSS motion
+  dropIn.style.offsetPath = "path('M100,20 L100,0')";
+  dropOut.style.offsetPath = "path('M150,200 L180,200')";
+</script>
+
+</body>
+</html>
