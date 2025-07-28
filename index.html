@@ -16,6 +16,7 @@
   .flow{stroke:#39f;stroke-width:6;stroke-dasharray:12 8;stroke-dashoffset:0;opacity:0;fill:none;pointer-events:none}
   .flow.active{opacity:1;animation:dash 1s linear infinite}
   @keyframes dash{to{stroke-dashoffset:-20}}
+  .pipe-label { font-size:14px; fill:#444; font-weight:bold }
 </style>
 </head>
 <body>
@@ -23,7 +24,7 @@
 <button onclick="togglePump()">Pump: <span id="pumpState">OFF</span></button>
 <button onclick="resetAll()">Reset Valves</button>
 
-<svg width="820" height="700">
+<svg width="820" height="720">
   <!-- manifolds -->
   <line class="pipe" x1="90" y1="200" x2="730" y2="200"/>
   <line class="pipe" x1="90" y1="460" x2="730" y2="460"/>
@@ -34,6 +35,9 @@
   <line class="pipe" x1="410" y1="200" x2="410" y2="300"/>
   <line class="pipe" x1="410" y1="380" x2="410" y2="460"/>
 
+  <!-- labels for pipe connections -->
+  <g id="labels"></g>
+
   <!-- flow groups -->
   <g id="botFlows"></g>
   <path id="pumpFlow" class="flow" d="M410,380 V300"/>
@@ -41,33 +45,36 @@
 </svg>
 
 <script>
-const xs=[150,310,470,630];            // valve x positions (1-4)
+const xs=[150,310,470,630];
 let openTop=new Set(), openBot=new Set(), pumpOn=false;
 const pumpState=document.getElementById('pumpState');
 const svg=document.querySelector('svg');
 const botG=document.getElementById('botFlows');
 const topG=document.getElementById('topFlows');
+const labelG=document.getElementById('labels');
 
-/* build stubs, valves, flows */
 xs.forEach((x,i)=>{
   const id=i+1;
 
-  /* plumbing stubs */
-  addPipe(x,120,x,160);  // top extension
-  addPipe(x,160,x,200);  // top stub to manifold
-  addPipe(x,500,x,460);  // bottom stub to manifold
-  addPipe(x,500,x,600);  // bottom extension (to tank — invisible now)
+  // Pipes
+  addPipe(x,120,x,160);  // Top extension
+  addPipe(x,160,x,200);  // Top stub
+  addPipe(x,500,x,460);  // Bottom stub
+  addPipe(x,500,x,600);  // Bottom extension
 
-  /* flow paths */
+  // Flow paths
   addFlow(botG,'b'+id,`M${x},600 V500 V460 H410 V380`);
   addFlow(topG,'t'+id,`M410,300 V200 H${x} V160 V120`);
 
-  /* valves */
+  // Valves
   addValve(x,160,'top',id);
   addValve(x,500,'bot',id);
+
+  // Labels
+  addLabel(x,110,'TO TANK');
+  addLabel(x,620,'FROM TANK');
 });
 
-/* helper builders */
 function addPipe(x1,y1,x2,y2){
   const l=document.createElementNS('http://www.w3.org/2000/svg','line');
   l.setAttribute('class','pipe'); l.setAttribute('x1',x1); l.setAttribute('y1',y1);
@@ -86,8 +93,14 @@ function addValve(x,y,side,id){
   t.setAttribute('x',x);   t.setAttribute('y',y+6); t.setAttribute('text-anchor','middle'); t.textContent=id;
   g.appendChild(r); g.appendChild(t); svg.appendChild(g);
 }
+function addLabel(x,y,text){
+  const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
+  lbl.setAttribute('x',x); lbl.setAttribute('y',y);
+  lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('class','pipe-label');
+  lbl.textContent=text;
+  labelG.appendChild(lbl);
+}
 
-/* interaction */
 function valveToggle(e){
   const side=e.currentTarget.dataset.side, id=+e.currentTarget.dataset.id;
   const set=side==='top'?openTop:openBot;
