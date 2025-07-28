@@ -2,120 +2,178 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Interactive Tank-Pump System</title>
+  <title>Water Tank System Interactive Diagram</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
-    .valve {
-      width: 40px;
-      height: 40px;
-      background-color: red;
-      color: white;
-      display: inline-block;
-      margin: 10px;
-      line-height: 40px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .pipe {
-      height: 10px;
-      background-color: gray;
-      margin: 10px auto;
-    }
-    .vertical {
-      width: 10px;
-      height: 50px;
-      margin: 0 auto;
-    }
-    #pump {
-      width: 80px;
-      height: 50px;
-      background-color: darkgray;
-      color: white;
-      line-height: 50px;
-      margin: 20px auto;
-      border-radius: 10px;
-    }
-    .row {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .column {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .label {
-      font-size: 12px;
-      margin-top: 5px;
-    }
-    .controls {
-      margin: 20px;
+    body { background: #f3f6fa; font-family: sans-serif; }
+    .diagram { margin: 30px auto; display: flex; flex-direction: column; align-items: center; }
+    .controls { margin: 20px 0; }
+    .valve-toggle, .pump-toggle { margin: 5px; }
+    .tank { fill: #b6d0e2; stroke: #4682b4; stroke-width: 3; }
+    .pump { fill: #ffd700; stroke: #b8860b; stroke-width: 3; }
+    .pipe { stroke: #888; stroke-width: 7; }
+    .valve { stroke: #333; stroke-width: 2; fill: #fff; }
+    .valve.open { fill: #4caf50; }
+    .valve.closed { fill: #f44336; }
+    .water { stroke: #2196f3; stroke-width: 7; stroke-dasharray: 15 10; animation: flow 1s linear infinite; }
+    .water.inactive { stroke: #bbb; }
+    @keyframes flow {
+      to { stroke-dashoffset: -25; }
     }
   </style>
 </head>
 <body>
+  <div class="diagram">
+    <svg id="diagram" width="800" height="500">
+      <!-- Tanks -->
+      <rect x="60"  y="100" width="80" height="180" rx="30" class="tank" id="tank0"/>
+      <rect x="60"  y="320" width="80" height="180" rx="30" class="tank" id="tank1"/>
+      <rect x="660" y="100" width="80" height="180" rx="30" class="tank" id="tank2"/>
+      <rect x="660" y="320" width="80" height="180" rx="30" class="tank" id="tank3"/>
 
-<h2>Interactive Tank–Pump System</h2>
+      <!-- Pump -->
+      <ellipse cx="400" cy="250" rx="50" ry="50" class="pump" id="pump"/>
+      <text x="400" y="255" text-anchor="middle" font-size="18" fill="#333">PUMP</text>
 
-<div class="controls">
-  <button onclick="togglePump()">Pump: <span id="pumpState">OFF</span></button>
-  <button onclick="resetValves()">Reset Valves</button>
-</div>
+      <!-- Pipes (suction) -->
+      <line x1="140" y1="130" x2="250" y2="130" class="pipe" id="pipe-suction-0"/>
+      <line x1="140" y1="410" x2="250" y2="410" class="pipe" id="pipe-suction-1"/>
+      <line x1="660" y1="130" x2="550" y2="130" class="pipe" id="pipe-suction-2"/>
+      <line x1="660" y1="410" x2="550" y2="410" class="pipe" id="pipe-suction-3"/>
+      <line x1="250" y1="130" x2="350" y2="170" class="pipe"/>
+      <line x1="250" y1="410" x2="350" y2="320" class="pipe"/>
+      <line x1="550" y1="130" x2="450" y2="170" class="pipe"/>
+      <line x1="550" y1="410" x2="450" y2="320" class="pipe"/>
+      <!-- To pump center -->
+      <line x1="350" y1="170" x2="400" y2="200" class="pipe"/>
+      <line x1="350" y1="320" x2="400" y2="300" class="pipe"/>
+      <line x1="450" y1="170" x2="400" y2="200" class="pipe"/>
+      <line x1="450" y1="320" x2="400" y2="300" class="pipe"/>
 
-<!-- Top manifold -->
-<div class="row">
-  <div class="pipe" style="width: 280px;"></div>
-</div>
-<div class="row">
-  <div class="column"><div class="valve" onclick="toggleValve(this)">1</div><div class="vertical pipe"></div></div>
-  <div class="column"><div class="valve" onclick="toggleValve(this)">2</div><div class="vertical pipe"></div></div>
-  <div class="column"><div class="valve" onclick="toggleValve(this)">3</div><div class="vertical pipe"></div></div>
-  <div class="column"><div class="valve" onclick="toggleValve(this)">4</div><div class="vertical pipe"></div></div>
-</div>
+      <!-- Pipes (return) -->
+      <line x1="400" y1="200" x2="400" y2="300" class="pipe"/>
+      <line x1="400" y1="200" x2="350" y2="170" class="pipe"/>
+      <line x1="400" y1="300" x2="350" y2="320" class="pipe"/>
+      <line x1="400" y1="200" x2="450" y2="170" class="pipe"/>
+      <line x1="400" y1="300" x2="450" y2="320" class="pipe"/>
+      <!-- Return to tanks -->
+      <line x1="350" y1="170" x2="250" y2="130" class="pipe"/>
+      <line x1="350" y1="320" x2="250" y2="410" class="pipe"/>
+      <line x1="450" y1="170" x2="550" y2="130" class="pipe"/>
+      <line x1="450" y1="320" x2="550" y2="410" class="pipe"/>
+      <line x1="250" y1="130" x2="140" y2="130" class="pipe" id="pipe-return-0"/>
+      <line x1="250" y1="410" x2="140" y2="410" class="pipe" id="pipe-return-1"/>
+      <line x1="550" y1="130" x2="660" y2="130" class="pipe" id="pipe-return-2"/>
+      <line x1="550" y1="410" x2="660" y2="410" class="pipe" id="pipe-return-3"/>
+      
+      <!-- Valves (suction) -->
+      <circle cx="200" cy="130" r="12" class="valve closed" id="valve-suction-0"/>
+      <circle cx="200" cy="410" r="12" class="valve closed" id="valve-suction-1"/>
+      <circle cx="600" cy="130" r="12" class="valve closed" id="valve-suction-2"/>
+      <circle cx="600" cy="410" r="12" class="valve closed" id="valve-suction-3"/>
+      <!-- Valves (return) -->
+      <circle cx="200" cy="130" r="12" class="valve closed" id="valve-return-0"/>
+      <circle cx="200" cy="410" r="12" class="valve closed" id="valve-return-1"/>
+      <circle cx="600" cy="130" r="12" class="valve closed" id="valve-return-2"/>
+      <circle cx="600" cy="410" r="12" class="valve closed" id="valve-return-3"/>
 
-<!-- Pump -->
-<div id="pump">Pump</div>
+      <!-- Water Animation (suction) -->
+      <line x1="140" y1="130" x2="250" y2="130" class="water inactive" id="water-suction-0"/>
+      <line x1="140" y1="410" x2="250" y2="410" class="water inactive" id="water-suction-1"/>
+      <line x1="660" y1="130" x2="550" y2="130" class="water inactive" id="water-suction-2"/>
+      <line x1="660" y1="410" x2="550" y2="410" class="water inactive" id="water-suction-3"/>
+      <!-- Water Animation (return) -->
+      <line x1="250" y1="130" x2="140" y2="130" class="water inactive" id="water-return-0"/>
+      <line x1="250" y1="410" x2="140" y2="410" class="water inactive" id="water-return-1"/>
+      <line x1="550" y1="130" x2="660" y2="130" class="water inactive" id="water-return-2"/>
+      <line x1="550" y1="410" x2="660" y2="410" class="water inactive" id="water-return-3"/>
+    </svg>
 
-<!-- Bottom manifold -->
-<div class="row">
-  <div class="column"><div class="vertical pipe"></div><div class="valve" onclick="toggleValve(this)">1</div><div class="label">From Tanks</div></div>
-  <div class="column"><div class="vertical pipe"></div><div class="valve" onclick="toggleValve(this)">2</div><div class="label">From Tank</div></div>
-  <div class="column"><div class="vertical pipe"></div><div class="valve" onclick="toggleValve(this)">3</div><div class="label">From Tank</div></div>
-  <div class="column"><div class="vertical pipe"></div><div class="valve" onclick="toggleValve(this)">4</div><div class="label">From Tank</div></div>
-</div>
-<div class="row">
-  <div class="pipe" style="width: 280px;"></div>
-</div>
+    <div class="controls">
+      <button id="pump-toggle" class="pump-toggle">Pump: OFF</button>
+      <br>
+      <div>
+        <span>Suction Valves:</span>
+        <button class="valve-toggle" data-manifold="suction" data-idx="0">Tank 1</button>
+        <button class="valve-toggle" data-manifold="suction" data-idx="1">Tank 2</button>
+        <button class="valve-toggle" data-manifold="suction" data-idx="2">Tank 3</button>
+        <button class="valve-toggle" data-manifold="suction" data-idx="3">Tank 4</button>
+      </div>
+      <div>
+        <span>Return Valves:</span>
+        <button class="valve-toggle" data-manifold="return" data-idx="0">Tank 1</button>
+        <button class="valve-toggle" data-manifold="return" data-idx="1">Tank 2</button>
+        <button class="valve-toggle" data-manifold="return" data-idx="2">Tank 3</button>
+        <button class="valve-toggle" data-manifold="return" data-idx="3">Tank 4</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    // State
+    let pumpOn = false;
+    let valves = {
+      suction: [false, false, false, false], // false = closed, true = open
+      return: [false, false, false, false]
+    };
 
-<script>
-  function togglePump() {
-    const state = document.getElementById('pumpState');
-    if (state.innerText === 'OFF') {
-      state.innerText = 'ON';
-    } else {
-      state.innerText = 'OFF';
+    // Elements
+    const pumpToggle = document.getElementById('pump-toggle');
+    const valveToggles = document.querySelectorAll('.valve-toggle');
+
+    // Update valve visuals
+    function updateValves() {
+      for (let m of ['suction','return']) {
+        for (let i=0;i<4;i++) {
+          const el = document.getElementById(`valve-${m}-${i}`);
+          if (!el) continue;
+          el.classList.remove('open','closed');
+          el.classList.add(valves[m][i] ? 'open' : 'closed');
+        }
+      }
     }
-  }
 
-  function toggleValve(el) {
-    if (el.style.backgroundColor === 'green') {
-      el.style.backgroundColor = 'red';
-    } else {
-      el.style.backgroundColor = 'green';
+    // Update water animation
+    function updateWater() {
+      for (let i=0;i<4;i++) {
+        // Suction: tank → pump
+        let el1 = document.getElementById(`water-suction-${i}`);
+        // Return: pump → tank
+        let el2 = document.getElementById(`water-return-${i}`);
+        let active = pumpOn && valves.suction[i] && valves.return[i];
+        [el1,el2].forEach(el => {
+          if (el) {
+            el.classList.toggle('inactive', !active);
+          }
+        });
+      }
     }
-  }
 
-  function resetValves() {
-    document.querySelectorAll('.valve').forEach(v => {
-      v.style.backgroundColor = 'red';
+    // Update pump button
+    function updatePump() {
+      pumpToggle.textContent = `Pump: ${pumpOn ? 'ON' : 'OFF'}`;
+      document.getElementById('pump').style.fill = pumpOn ? '#4caf50' : '#ffd700';
+    }
+
+    // Initial render
+    updateValves();
+    updateWater();
+    updatePump();
+
+    // Event listeners
+    pumpToggle.addEventListener('click', () => {
+      pumpOn = !pumpOn;
+      updatePump();
+      updateWater();
     });
-    document.getElementById('pumpState').innerText = 'OFF';
-  }
-</script>
 
+    valveToggles.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const m = btn.dataset.manifold;
+        const idx = +btn.dataset.idx;
+        valves[m][idx] = !valves[m][idx];
+        updateValves();
+        updateWater();
+      });
+    });
+  </script>
 </body>
 </html>
