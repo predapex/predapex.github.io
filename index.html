@@ -1,3 +1,4 @@
+interactive_tank_pump_labeled.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -91,7 +92,7 @@
   }
   function addFlow(parent,id,d){
     const p=document.createElementNS('http://www.w3.org/2000/svg','path');
-    p.id=id; p.setAttribute('d',d); p.setAttribute('class','flow');
+    p.setAttribute('id',id); p.setAttribute('d',d); p.setAttribute('class','flow');
     parent.appendChild(p);
   }
   function addValve(x,y,side,id){
@@ -114,7 +115,7 @@
   }
   function addLabel(x,y,id,text){
     const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
-    lbl.id=id;
+    lbl.setAttribute('id',id);
     lbl.setAttribute('class','pipe-label hidden');
     lbl.setAttribute('x',x);
     lbl.setAttribute('y',y);
@@ -150,21 +151,17 @@
   }
 
   function update(){
-    // core pump flow
     const coreActive = pumpOn && openTop.size>0 && openBot.size>0;
     document.getElementById('pumpFlow')
             .classList.toggle('active',coreActive);
 
     xs.forEach((_,i)=>{
       const id=i+1;
-      // bottom flows + labels
       const botActive = pumpOn && openBot.has(id) && openTop.size>0;
       document.getElementById('b'+id)
               .classList.toggle('active',botActive);
       document.getElementById('labelBot'+id)
               .classList.toggle('visible', openBot.has(id));
-
-      // top flows + labels
       const topActive = pumpOn && openTop.has(id) && openBot.size>0;
       document.getElementById('t'+id)
               .classList.toggle('active',topActive);
