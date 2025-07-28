@@ -1,76 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Interactive Tank-Pump System</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        .valve {
-            width: 40px;
-            height: 40px;
-            background-color: red;
-            color: white;
-            font-weight: bold;
-            line-height: 40px;
-            border-radius: 5px;
-            display: inline-block;
-            margin: 10px;
-            cursor: pointer;
-        }
-        .pipe {
-            width: 6px;
-            background-color: gray;
-            display: inline-block;
-        }
-        .pump {
-            width: 100px;
-            height: 60px;
-            background-color: darkgray;
-            border-radius: 30px;
-            line-height: 60px;
-            color: white;
-            margin: 20px auto;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Interactive Tank-Pump System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    .valve {
+      width: 40px;
+      height: 40px;
+      background-color: red;
+      color: white;
+      display: inline-block;
+      margin: 10px;
+      line-height: 40px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .pipe {
+      height: 10px;
+      background-color: gray;
+      margin: 10px auto;
+    }
+    .vertical {
+      width: 10px;
+      height: 50px;
+      margin: 0 auto;
+    }
+    #pump {
+      width: 80px;
+      height: 50px;
+      background-color: darkgray;
+      color: white;
+      line-height: 50px;
+      margin: 20px auto;
+      border-radius: 10px;
+    }
+    .row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .label {
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    .controls {
+      margin: 20px;
+    }
+  </style>
 </head>
 <body>
-    <h1>Interactive Tank-Pump System</h1>
-    <button onclick="togglePump()">Pump: <span id="pumpState">OFF</span></button>
-    <button onclick="resetValves()">Reset Valves</button>
-    <div>
-        <div>
-            <div class="valve" onclick="toggleValve(this)">1</div>
-            <div class="valve" onclick="toggleValve(this)">2</div>
-            <div class="valve" onclick="toggleValve(this)">3</div>
-            <div class="valve" onclick="toggleValve(this)">4</div>
-        </div>
-        <div class="pipe" style="height: 100px;"></div>
-        <div class="pump" id="pump">Pump</div>
-        <div class="pipe" style="height: 100px;"></div>
-        <div>
-            <div class="valve" onclick="toggleValve(this)">1</div>
-            <div class="valve" onclick="toggleValve(this)">2</div>
-            <div class="valve" onclick="toggleValve(this)">3</div>
-            <div class="valve" onclick="toggleValve(this)">4</div>
-        </div>
-    </div>
-    <script>
-        function togglePump() {
-            const state = document.getElementById("pumpState");
-            state.textContent = state.textContent === "OFF" ? "ON" : "OFF";
-        }
-        function toggleValve(valve) {
-            valve.style.backgroundColor = valve.style.backgroundColor === "green" ? "red" : "green";
-        }
-        function resetValves() {
-            const valves = document.getElementsByClassName("valve");
-            for (let v of valves) {
-                v.style.backgroundColor = "red";
-            }
-        }
-    </script>
+
+<h2>Interactive Tank–Pump System</h2>
+
+<div class="controls">
+  <button onclick="togglePump()">Pump: <span id="pumpState">OFF</span></button>
+  <button onclick="resetValves()">Reset Valves</button>
+</div>
+
+<!-- Top manifold -->
+<div class="row">
+  <div class="pipe" style="width: 280px;"></div>
+</div>
+<div class="row">
+  <div class="column"><div class="valve" onclick="toggleValve(this)">1</div><div class="vertical pipe"></div></div>
+  <div class="column"><div class="valve" onclick="toggleValve(this)">2</div><div class="vertical pipe"></div></div>
+  <div class="column"><div class="valve" onclick="toggleValve(this)">3</div><div class="vertical pipe"></div></div>
+  <div class="column"><div class="valve" onclick="toggleValve(this)">4</div><div class="vertical pipe"></div></div>
+</div>
+
+<!-- Pump -->
+<div id="pump">Pump</div>
+
+<!-- Bottom manifold -->
+<div class="row">
+  <div class="column"><div class="vertical pipe"></div><div class="valve" onclick="toggleValve(this)">1</div><div class="label">From Tanks</div></div>
+  <div class="column"><div class="vertical pipe"></div><div class="valve" onclick="toggleValve(this)">2</div><div class="label">From Tank</div></div>
+  <div class="column"><div class="vertical pipe"></div><div class="valve" onclick="toggleValve(this)">3</div><div class="label">From Tank</div></div>
+  <div class="column"><div class="vertical pipe"></div><div class="valve" onclick="toggleValve(this)">4</div><div class="label">From Tank</div></div>
+</div>
+<div class="row">
+  <div class="pipe" style="width: 280px;"></div>
+</div>
+
+<script>
+  function togglePump() {
+    const state = document.getElementById('pumpState');
+    if (state.innerText === 'OFF') {
+      state.innerText = 'ON';
+    } else {
+      state.innerText = 'OFF';
+    }
+  }
+
+  function toggleValve(el) {
+    if (el.style.backgroundColor === 'green') {
+      el.style.backgroundColor = 'red';
+    } else {
+      el.style.backgroundColor = 'green';
+    }
+  }
+
+  function resetValves() {
+    document.querySelectorAll('.valve').forEach(v => {
+      v.style.backgroundColor = 'red';
+    });
+    document.getElementById('pumpState').innerText = 'OFF';
+  }
+</script>
+
 </body>
 </html>
