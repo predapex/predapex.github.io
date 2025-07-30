@@ -1,174 +1,125 @@
-interactive_tank_pump_labeled.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Interactive Tank-Pump System</title>
-<style>
-  body{font-family:sans-serif;text-align:center;margin:0}
-  button{margin:12px 6px;padding:8px 18px;font-size:18px;border:none;border-radius:8px;
-         background:#e5e9f0;color:#036;cursor:pointer}
-  button:hover{background:#d8dee9}
-  svg{user-select:none}
-  .pipe{stroke:#777;stroke-width:10;stroke-linecap:round;fill:none}
-  .pump{fill:#666;stroke:#444;stroke-width:2}
-  .valve.closed rect{fill:#d00}
-  .valve.open  rect{fill:#0a0}
-  .valve text{pointer-events:none;font-size:18px;fill:#fff;font-weight:bold}
-  .flow{stroke:#39f;stroke-width:6;stroke-dasharray:12 8;stroke-dashoffset:0;
-        opacity:0;fill:none;pointer-events:none}
-  .flow.active{opacity:1;animation:dash 1s linear infinite}
-  @keyframes dash{to{stroke-dashoffset:-20}}
-  .pipe-label{font-size:14px;fill:#444;font-weight:bold;pointer-events:none}
-  .pipe-label.hidden{opacity:0}
-  .pipe-label.visible{opacity:1;transition:opacity 0.3s}
-  .group-label{font-size:18px;fill:#333;font-weight:bold;pointer-events:none}
-</style>
+  <meta charset="UTF-8" />
+  <title>Feature Modal Demo</title>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-wHELcyZ2RpaCPf74idvEhGfq9XnCkPG3FmZy3bhLwJx7sPLcrgy4PwZgMRDZnbmNLz44Ux4N4+vbHbsYpWMPbg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f4f6f8;
+    }
+    button {
+      padding: 10px 24px;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      background: #1565c0;
+      color: #fff;
+      border-radius: 4px;
+    }
+
+    /* ==== Modal Styles ==== */
+    #modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none; /* hidden by default */
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #modal {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 32px 40px;
+      max-width: 520px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+    #modal h2 {
+      margin-top: 0;
+      margin-bottom: 24px;
+      font-size: 1.5rem;
+    }
+    .close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 1.5rem;
+      color: #666;
+      cursor: pointer;
+    }
+    /* Feature list */
+    .features {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      justify-content: center;
+    }
+    .features li {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.95rem;
+      width: 100px;
+    }
+    .features i {
+      font-size: 2rem;
+      color: #1565c0;
+      margin-bottom: 6px;
+    }
+  </style>
 </head>
 <body>
-  <h2>Interactive Tank-Pump System</h2>
-  <button onclick="togglePump()">Pump: <span id="pumpState">OFF</span></button>
-  <button onclick="resetAll()">Reset Valves</button>
 
-  <svg width="820" height="720">
-    <!-- manifolds -->
-    <line class="pipe" x1="90" y1="200" x2="730" y2="200"/>
-    <line class="pipe" x1="90" y1="460" x2="730" y2="460"/>
+  <button id="open">Show Features</button>
 
-    <!-- pump -->
-    <rect class="pump" x="310" y="300" rx="20" ry="20" width="200" height="80"/>
-    <text x="410" y="345" text-anchor="middle" font-size="26" fill="#fff">Pump</text>
-    <line class="pipe" x1="410" y1="200" x2="410" y2="300"/>
-    <line class="pipe" x1="410" y1="380" x2="410" y2="460"/>
-
-    <!-- static group labels -->
-    <text x="410" y="240" text-anchor="middle" class="group-label">Return Valves</text>
-    <text x="410" y="480" text-anchor="middle" class="group-label">Suction Valves</text>
-
-    <!-- dynamic labels -->
-    <g id="labels"></g>
-
-    <!-- flow groups -->
-    <g id="botFlows"></g>
-    <path id="pumpFlow" class="flow" d="M410,380 V300"/>
-    <g id="topFlows"></g>
-  </svg>
+  <div id="modal-overlay">
+    <div id="modal">
+      <span class="close" id="close">&times;</span>
+      <h2>Why Our Containers Rock</h2>
+      <ul class="features">
+        <li><i class="fas fa-bolt"></i><span>Instant Delivery</span></li>
+        <li><i class="fas fa-cloud-sun-rain"></i><span>Weather‑Proof</span></li>
+        <li><i class="fas fa-shield-dog"></i><span>Rodent‑Proof</span></li>
+        <li><i class="fas fa-shield-alt"></i><span>Vandal‑Resistant</span></li>
+      </ul>
+    </div>
+  </div>
 
   <script>
-  const xs=[150,310,470,630];
-  let openTop=new Set(), openBot=new Set(), pumpOn=false;
+    const openBtn = document.getElementById('open');
+    const overlay = document.getElementById('modal-overlay');
+    const closeBtn = document.getElementById('close');
 
-  const pumpState=document.getElementById('pumpState'),
-        svg=document.querySelector('svg'),
-        botG=document.getElementById('botFlows'),
-        topG=document.getElementById('topFlows'),
-        labelG=document.getElementById('labels');
-
-  // Build stubs, valves, flows & per-valve labels
-  xs.forEach((x,i)=>{
-    const id=i+1;
-    // Plumbing stubs
-    addPipe(x,120,x,160);
-    addPipe(x,160,x,200);
-    addPipe(x,500,x,460);
-    addPipe(x,500,x,600);
-    // Flow paths
-    addFlow(botG,'b'+id,`M${x},600 V500 V460 H410 V380`);
-    addFlow(topG,'t'+id,`M410,300 V200 H${x} V160 V120`);
-    // Valves
-    addValve(x,160,'top',id);
-    addValve(x,500,'bot',id);
-    // Per-valve TO/FROM labels with numbers
-    addLabel(x,110,'labelTop'+id,`TO TANK ${id}`);
-    addLabel(x,620,'labelBot'+id,`FROM TANK ${id}`);
-  });
-
-  function addPipe(x1,y1,x2,y2){
-    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
-    l.setAttribute('class','pipe');
-    l.setAttribute('x1',x1); l.setAttribute('y1',y1);
-    l.setAttribute('x2',x2); l.setAttribute('y2',y2);
-    svg.appendChild(l);
-  }
-  function addFlow(parent,id,d){
-    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
-    p.setAttribute('id',id); p.setAttribute('d',d); p.setAttribute('class','flow');
-    parent.appendChild(p);
-  }
-  function addValve(x,y,side,id){
-    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
-    g.classList.add('valve','closed');
-    g.dataset.side=side; g.dataset.id=id;
-    g.addEventListener('click',toggleValve);
-
-    const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
-    r.setAttribute('x',x-20); r.setAttribute('y',y-20);
-    r.setAttribute('width',40); r.setAttribute('height',40); r.setAttribute('rx',5);
-
-    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
-    t.setAttribute('x',x); t.setAttribute('y',y+6);
-    t.setAttribute('text-anchor','middle');
-    t.textContent=id;
-
-    g.appendChild(r); g.appendChild(t);
-    svg.appendChild(g);
-  }
-  function addLabel(x,y,id,text){
-    const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
-    lbl.setAttribute('id',id);
-    lbl.setAttribute('class','pipe-label hidden');
-    lbl.setAttribute('x',x);
-    lbl.setAttribute('y',y);
-    lbl.setAttribute('text-anchor','middle');
-    lbl.textContent=text;
-    labelG.appendChild(lbl);
-  }
-
-  function toggleValve(e){
-    const side=e.currentTarget.dataset.side,
-          id=+e.currentTarget.dataset.id,
-          set= side==='top'?openTop:openBot;
-    if(set.has(id)){
-      set.delete(id);
-      e.currentTarget.classList.replace('open','closed');
-    } else {
-      set.add(id);
-      e.currentTarget.classList.replace('closed','open');
-    }
-    update();
-  }
-  function togglePump(){
-    pumpOn=!pumpOn;
-    pumpState.textContent=pumpOn?'ON':'OFF';
-    update();
-  }
-  function resetAll(){
-    document.querySelectorAll('.valve.open')
-            .forEach(v=>v.classList.replace('open','closed'));
-    openTop.clear(); openBot.clear(); pumpOn=false;
-    pumpState.textContent='OFF';
-    update();
-  }
-
-  function update(){
-    const coreActive = pumpOn && openTop.size>0 && openBot.size>0;
-    document.getElementById('pumpFlow')
-            .classList.toggle('active',coreActive);
-
-    xs.forEach((_,i)=>{
-      const id=i+1;
-      const botActive = pumpOn && openBot.has(id) && openTop.size>0;
-      document.getElementById('b'+id)
-              .classList.toggle('active',botActive);
-      document.getElementById('labelBot'+id)
-              .classList.toggle('visible', openBot.has(id));
-      const topActive = pumpOn && openTop.has(id) && openBot.size>0;
-      document.getElementById('t'+id)
-              .classList.toggle('active',topActive);
-      document.getElementById('labelTop'+id)
-              .classList.toggle('visible', openTop.has(id));
+    openBtn.addEventListener('click', () => {
+      overlay.style.display = 'flex';
     });
-  }
+
+    closeBtn.addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>
