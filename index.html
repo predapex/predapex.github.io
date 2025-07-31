@@ -11,52 +11,69 @@
       border: 2px solid #000;
       position: relative;
       margin: 20px auto;
+      background: #eef;
     }
 
-    /* Labels for valves */
+    /* Valve visual style */
+    .valve {
+      width: 20px;
+      height: 20px;
+      background: #666;
+      border: 2px solid #333;
+      border-radius: 50%;
+      position: absolute;
+      cursor: pointer;
+    }
+
+    /* Label style */
     .valve-label {
       position: absolute;
       background: rgba(255, 255, 255, 0.9);
       padding: 2px 5px;
       border: 1px solid #000;
       display: none;
+      font-size: 12px;
+      pointer-events: none;
     }
 
-    /* Positions for valve labels (adjust as needed) */
-    #label-valve1 { top: 40px; left: -60px; }
-    #label-valve2 { top: 120px; left: -60px; }
-    #label-valve3 { top: 200px; left: -60px; }
-    #label-valve4 { top: 280px; left: -60px; }
-    #label-pool   { top: 160px; left: 220px; } /* 5th valve (pool) */
+    /* Valve positions */
+    #valve1 { top: 40px; left: -10px; }
+    #valve2 { top: 100px; left: -10px; }
+    #valve3 { top: 160px; left: -10px; }
+    #valve4 { top: 220px; left: -10px; }
+    #valve-pool { top: 280px; left: -10px; }
+
+    /* Label positions */
+    #label-valve1 { top: 36px; left: 20px; }
+    #label-valve2 { top: 96px; left: 20px; }
+    #label-valve3 { top: 156px; left: 20px; }
+    #label-valve4 { top: 216px; left: 20px; }
+    #label-pool   { top: 276px; left: 20px; }
   </style>
 </head>
 <body>
   <div id="tank">
-    <!-- Existing valve labels -->
-    <div id="label-valve1" class="valve-label">Valve 1</div>
-    <div id="label-valve2" class="valve-label">Valve 2</div>
-    <div id="label-valve3" class="valve-label">Valve 3</div>
-    <div id="label-valve4" class="valve-label">Valve 4</div>
-    <!-- New pool valve label -->
-    <div id="label-pool" class="valve-label">pool</div>
-  </div>
+    <!-- Valve elements -->
+    <div class="valve" id="valve1" data-label="label-valve1"></div>
+    <div class="valve" id="valve2" data-label="label-valve2"></div>
+    <div class="valve" id="valve3" data-label="label-valve3"></div>
+    <div class="valve" id="valve4" data-label="label-valve4"></div>
+    <div class="valve" id="valve-pool" data-label="label-pool"></div>
 
-  <div style="text-align:center; margin-top: 20px;">
-    <!-- Toggle buttons for each valve -->
-    <button data-label="label-valve1">Toggle Valve 1</button>
-    <button data-label="label-valve2">Toggle Valve 2</button>
-    <button data-label="label-valve3">Toggle Valve 3</button>
-    <button data-label="label-valve4">Toggle Valve 4</button>
-    <!-- Button for new pool valve -->
-    <button data-label="label-pool">Toggle Pool Valve</button>
+    <!-- Labels for each valve -->
+    <div class="valve-label" id="label-valve1">Valve 1</div>
+    <div class="valve-label" id="label-valve2">Valve 2</div>
+    <div class="valve-label" id="label-valve3">Valve 3</div>
+    <div class="valve-label" id="label-valve4">Valve 4</div>
+    <div class="valve-label" id="label-pool">pool</div>
   </div>
 
   <script>
-    // Attach click handlers to all toggle buttons
-    document.querySelectorAll('button[data-label]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const labelEl = document.getElementById(btn.getAttribute('data-label'));
-        labelEl.style.display = labelEl.style.display === 'block' ? 'none' : 'block';
+    // Toggle label visibility when valve is clicked
+    document.querySelectorAll('.valve').forEach(valve => {
+      valve.addEventListener('click', () => {
+        const lbl = document.getElementById(valve.getAttribute('data-label'));
+        lbl.style.display = lbl.style.display === 'block' ? 'none' : 'block';
       });
     });
   </script>
