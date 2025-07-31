@@ -2,78 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Interactive Tank Valve Diagram</title>
+  <title>Interactive Tank-Pump System</title>
   <style>
-    /* Tank container */
-    #tank {
-      width: 200px;
-      height: 300px;
-      border: 2px solid #000;
-      position: relative;
-      margin: 20px auto;
-      background: #eef;
-    }
-
-    /* Valve visual style */
-    .valve {
-      width: 20px;
-      height: 20px;
-      background: #666;
-      border: 2px solid #333;
-      border-radius: 50%;
+    body { font-family: sans-serif; text-align: center; }
+    #diagram { position: relative; width: 600px; height: 400px; margin: 20px auto; }
+    /* Pipes */
+    .pipe {
       position: absolute;
-      cursor: pointer;
+      background: #777;
     }
-
-    /* Label style */
-    .valve-label {
-      position: absolute;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 2px 5px;
-      border: 1px solid #000;
-      display: none;
-      font-size: 12px;
-      pointer-events: none;
-    }
-
-    /* Valve positions */
-    #valve1 { top: 40px; left: -10px; }
-    #valve2 { top: 100px; left: -10px; }
-    #valve3 { top: 160px; left: -10px; }
-    #valve4 { top: 220px; left: -10px; }
-    #valve-pool { top: 280px; left: -10px; }
-
-    /* Label positions */
-    #label-valve1 { top: 36px; left: 20px; }
-    #label-valve2 { top: 96px; left: 20px; }
-    #label-valve3 { top: 156px; left: 20px; }
-    #label-valve4 { top: 216px; left: 20px; }
-    #label-pool   { top: 276px; left: 20px; }
+    #pipe-top { top: 50px; left: 50px; width: 500px; height: 10px; }
+    #pipe-bottom { top: 250px; left: 50px; width: 500px; height: 10px; }
+    /* Vertical connectors */
+    .connector { position: absolute; width: 10px; background: #777; }
+    .conn-top { height: 50px; top: 10px; }
+    .conn-bottom { height: 50px; top: 260px; }
+    #conn-pump-top { left: 295px; top: 60px; height: 80px; }
+    #conn-pump-bottom { left: 295px; top: 160px; height: 90px; }
+    /* Pump */
+    #pump { position: absolute; top: 140px; left: 250px; width: 100px; height: 60px; background: #666; border-radius: 10px; color: white; line-height: 60px; }
+    /* Valve style */
+    .valve { position: absolute; width: 30px; height: 30px; background: red; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; }
+    /* Valve positions top */
+    #valve1 { top: 30px; left: 120px; }
+    #valve2 { top: 30px; left: 240px; }
+    #valve3 { top: 30px; left: 360px; }
+    #valve4 { top: 30px; left: 480px; }
+    /* Valve positions bottom */
+    #valve5 { top: 280px; left: 480px; }
+    #valve6 { top: 280px; left: 120px; }
+    #valve7 { top: 280px; left: 240px; }
+    #valve8 { top: 280px; left: 360px; }
+    /* Text labels for lines */
+    .line-label { position: absolute; font-weight: bold; }
+    #label-return { top: 20px; left: 260px; }
+    #label-suction { top: 250px; left: 260px; }
+    /* Buttons */
+    #controls { margin-top: 20px; }
+    button { margin: 0 10px; padding: 8px 12px; }
   </style>
 </head>
 <body>
-  <div id="tank">
-    <!-- Valve elements -->
-    <div class="valve" id="valve1" data-label="label-valve1"></div>
-    <div class="valve" id="valve2" data-label="label-valve2"></div>
-    <div class="valve" id="valve3" data-label="label-valve3"></div>
-    <div class="valve" id="valve4" data-label="label-valve4"></div>
-    <div class="valve" id="valve-pool" data-label="label-pool"></div>
-
-    <!-- Labels for each valve -->
-    <div class="valve-label" id="label-valve1">Valve 1</div>
-    <div class="valve-label" id="label-valve2">Valve 2</div>
-    <div class="valve-label" id="label-valve3">Valve 3</div>
-    <div class="valve-label" id="label-valve4">Valve 4</div>
-    <div class="valve-label" id="label-pool">pool</div>
+  <h3>Interactive Tank-Pump System</h3>
+  <div id="diagram">
+    <!-- Pipes -->
+    <div id="pipe-top" class="pipe"></div>
+    <div id="pipe-bottom" class="pipe"></div>
+    <!-- Connectors -->
+    <div id="conn-pump-top" class="connector"></div>
+    <div id="pump">Pump</div>
+    <div id="conn-pump-bottom" class="connector"></div>
+    <!-- Valve squares -->
+    <div class="valve" id="valve1" data-id="1" data-line="return">1</div>
+    <div class="valve" id="valve2" data-id="2" data-line="return">2</div>
+    <div class="valve" id="valve3" data-id="3" data-line="return">3</div>
+    <div class="valve" id="valve4" data-id="4" data-line="return">4</div>
+    <div class="valve" id="valve6" data-id="1" data-line="suction">1</div>
+    <div class="valve" id="valve7" data-id="2" data-line="suction">2</div>
+    <div class="valve" id="valve8" data-id="3" data-line="suction">3</div>
+    <div class="valve" id="valve5" data-id="5" data-line="suction">5</div>
+    <!-- Line labels -->
+    <div id="label-return" class="line-label">Return Valves</div>
+    <div id="label-suction" class="line-label">Suction Valves</div>
   </div>
-
+  <div id="controls">
+    <button id="toggle-pump">Pump: OFF</button>
+    <button id="reset-valves">Reset Valves</button>
+  </div>
   <script>
-    // Toggle label visibility when valve is clicked
-    document.querySelectorAll('.valve').forEach(valve => {
-      valve.addEventListener('click', () => {
-        const lbl = document.getElementById(valve.getAttribute('data-label'));
-        lbl.style.display = lbl.style.display === 'block' ? 'none' : 'block';
+    let pumpOn = false;
+    document.getElementById('toggle-pump').addEventListener('click', () => {
+      pumpOn = !pumpOn;
+      document.getElementById('toggle-pump').textContent = pumpOn ? 'Pump: ON' : 'Pump: OFF';
+    });
+    // Valve toggle state
+    const valves = document.querySelectorAll('.valve');
+    valves.forEach(v => {
+      v.dataset.state = 'closed';
+      v.addEventListener('click', () => {
+        v.dataset.state = (v.dataset.state === 'open' ? 'closed' : 'open');
+        v.style.opacity = v.dataset.state === 'open' ? '0.5' : '1';
+      });
+    });
+    // Reset
+    document.getElementById('reset-valves').addEventListener('click', () => {
+      valves.forEach(v => {
+        v.dataset.state = 'closed';
+        v.style.opacity = '1';
       });
     });
   </script>
