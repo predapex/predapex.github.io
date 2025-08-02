@@ -1,81 +1,84 @@
-network_diagram.html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Interactive Network Diagram</title>
+  <title>Animated Tank</title>
   <style>
-    .device { cursor: pointer; fill: lightgray; stroke: black; stroke-width:2; }
-    .path { stroke: black; stroke-width:2; }
-    .highlight { stroke: red !important; fill: red !important; }
-    button { margin:10px; padding:5px; }
-    text { font-family: Arial, sans-serif; font-size: 12px; }
+    body {
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    svg {
+      overflow: visible;
+    }
+    .tank {
+      fill: none;
+      stroke: #333;
+      stroke-width: 4;
+      rx: 5;
+    }
+    .pipe {
+      fill: none;
+      stroke: #888;
+      stroke-width: 10;
+      stroke-linecap: round;
+    }
+    .water-group {
+      clip-path: url(#tank-clip);
+    }
+    .water {
+      fill: #39f;
+    }
+    .wave {
+      fill: #39f;
+      animation: wave 2s linear infinite;
+    }
+    @keyframes wave {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50px); }
+    }
+    .water-level {
+      animation: rise 4s ease-in-out infinite alternate;
+    }
+    @keyframes rise {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-10px); }
+    }
   </style>
 </head>
 <body>
-  <h2>Interactive Network Diagram</h2>
-  <button onclick="toggleSignal()">Toggle Tim’s Signal</button>
-  <script>
-    function toggleSignal() {
-      document.querySelectorAll('.path').forEach(el => {
-        el.classList.toggle('highlight');
-      });
-    }
-    function toggleDevice(id) {
-      const el = document.getElementById(id);
-      el.classList.toggle('highlight');
-    }
-  </script>
-  <svg width="800" height="650">
-    <!-- Nodes -->
-    <circle id="TimCPE" class="device" cx="400" cy="50" r="20" onclick="toggleDevice('TimCPE')" />
-    <text x="400" y="90" text-anchor="middle">Tim’s CPE</text>
-    <circle id="YourRouter" class="device" cx="400" cy="150" r="20" onclick="toggleDevice('YourRouter')" />
-    <text x="400" y="190" text-anchor="middle">Your Router</text>
-    <circle id="HouseSwitch" class="device" cx="400" cy="250" r="20" onclick="toggleDevice('HouseSwitch')" />
-    <text x="400" y="290" text-anchor="middle">House Switch</text>
-    <circle id="AP_House" class="device" cx="300" cy="350" r="20" onclick="toggleDevice('AP_House')" />
-    <text x="300" y="390" text-anchor="middle">House AP</text>
-    <circle id="NVR" class="device" cx="400" cy="350" r="20" onclick="toggleDevice('NVR')" />
-    <text x="400" y="390" text-anchor="middle">NVR</text>
-    <circle id="Printer" class="device" cx="500" cy="350" r="20" onclick="toggleDevice('Printer')" />
-    <text x="500" y="390" text-anchor="middle">Printer</text>
-    <circle id="UpperGateSwitch" class="device" cx="200" cy="450" r="20" onclick="toggleDevice('UpperGateSwitch')" />
-    <text x="200" y="490" text-anchor="middle">Upper Gate</text>
-    <circle id="Cam_Upper" class="device" cx="100" cy="450" r="15" onclick="toggleDevice('Cam_Upper')" />
-    <text x="100" y="480" text-anchor="middle">Cam</text>
-    <circle id="LowerGateBridge" class="device" cx="200" cy="600" r="20" onclick="toggleDevice('LowerGateBridge')" />
-    <text x="200" y="640" text-anchor="middle">Lower Gate</text>
-    <circle id="Cam_Lower" class="device" cx="100" cy="600" r="15" onclick="toggleDevice('Cam_Lower')" />
-    <text x="100" y="630" text-anchor="middle">Cam</text>
-    <circle id="ShopSwitch" class="device" cx="600" cy="450" r="20" onclick="toggleDevice('ShopSwitch')" />
-    <text x="600" y="490" text-anchor="middle">Shop Switch</text>
-    <circle id="ShopAP" class="device" cx="700" cy="350" r="20" onclick="toggleDevice('ShopAP')" />
-    <text x="700" y="390" text-anchor="middle">Shop AP</text>
-    <circle id="Cam_Shop1" class="device" cx="650" cy="450" r="15" onclick="toggleDevice('Cam_Shop1')" />
-    <text x="650" y="480" text-anchor="middle">Cam</text>
-    <circle id="Cam_Shop2" class="device" cx="550" cy="450" r="15" onclick="toggleDevice('Cam_Shop2')" />
-    <text x="550" y="480" text-anchor="middle">Cam</text>
-    <circle id="TowerAP" class="device" cx="600" cy="600" r="20" onclick="toggleDevice('TowerAP')" />
-    <text x="600" y="640" text-anchor="middle">Tower AP</text>
-    <circle id="Cam_Tower" class="device" cx="700" cy="600" r="15" onclick="toggleDevice('Cam_Tower')" />
-    <text x="700" y="630" text-anchor="middle">Cam</text>
-    <!-- Paths -->
-    <line x1="400" y1="70" x2="400" y2="130" class="path"/>
-    <line x1="400" y1="170" x2="400" y2="230" class="path"/>
-    <line x1="400" y1="270" x2="300" y2="330" class="path"/>
-    <line x1="400" y1="270" x2="400" y2="330" class="path"/>
-    <line x1="400" y1="270" x2="500" y2="330" class="path"/>
-    <line x1="400" y1="270" x2="200" y2="430" class="path"/>
-    <line x1="200" y1="470" x2="100" y2="450" class="path"/>
-    <line x1="200" y1="470" x2="200" y2="580" class="path"/>
-    <line x1="200" y1="640" x2="100" y2="620" class="path"/>
-    <line x1="400" y1="270" x2="600" y2="430" class="path"/>
-    <line x1="600" y1="470" x2="700" y2="370" class="path"/>
-    <line x1="600" y1="470" x2="650" y2="450" class="path"/>
-    <line x1="600" y1="470" x2="550" y2="450" class="path"/>
-    <line x1="600" y1="470" x2="600" y2="580" class="path"/>
-    <line x1="600" y1="620" x2="700" y2="610" class="path"/>
+  <svg width="300" height="450" viewBox="0 0 300 450">
+    <!-- Tank Outline -->
+    <rect x="100" y="75" width="100" height="300" class="tank" />
+
+    <!-- Clip region matching tank interior -->
+    <defs>
+      <clipPath id="tank-clip">
+        <rect x="100" y="75" width="100" height="300" />
+      </clipPath>
+    </defs>
+
+    <!-- Pipes -->
+    <!-- Pipe up the left side into top -->
+    <path d="M100,350 L100,125 L200,125" class="pipe" />
+    <!-- Pipe into side near bottom -->
+    <path d="M200,325 L250,325" class="pipe" />
+
+    <!-- Water group with level animation -->
+    <g class="water-group water-level">
+      <!-- Static water fill rectangle -->
+      <rect x="100" y="225" width="100" height="150" class="water" />
+      <!-- Animated wave on top -->
+      <path d="M100,225
+               c 25,15 50,-15 75,0
+               v 150 h -175 v -150
+               c 25,15 50,-15 75,0 Z"
+            class="wave" />
+    </g>
   </svg>
 </body>
 </html>
