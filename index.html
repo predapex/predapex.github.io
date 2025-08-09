@@ -1,178 +1,258 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Interactive Tank-Pump System</title>
+<meta charset="utf-8">
+<title>Interactive Tank–Pump System</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-  body{font-family:sans-serif;text-align:center;margin:0}
-  button{margin:12px 6px;padding:8px 18px;font-size:18px;border:none;border-radius:8px;
-         background:#e5e9f0;color:#036;cursor:pointer}
-  button:hover{background:#d8dee9}
-  svg{user-select:none}
-  .pipe{stroke:#777;stroke-width:10;stroke-linecap:round;fill:none}
-  .pump{fill:#666;stroke:#444;stroke-width:2}
-  .valve.closed rect{fill:#d00}
-  .valve.open  rect{fill:#0a0}
-  .valve text{pointer-events:none;font-size:18px;fill:#fff;font-weight:bold}
-  .flow{stroke:#39f;stroke-width:6;stroke-dasharray:12 8;stroke-dashoffset:0;
-        opacity:0;fill:none;pointer-events:none}
-  .flow.active{opacity:1;animation:dash 1s linear infinite}
-  @keyframes dash{to{stroke-dashoffset:-20}}
-  .pipe-label{font-size:14px;fill:#444;font-weight:bold;pointer-events:none}
-  .pipe-label.hidden{opacity:0}
-  .pipe-label.visible{opacity:1;transition:opacity 0.3s}
-  .group-label{font-size:18px;fill:#333;font-weight:bold;pointer-events:none}
+  :root { --ok:#22a745; --bad:#c62828; --mid:#1f6feb; --off:#777; --bg:#0e1117; --fg:#e6edf3; }
+  html,body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.3 system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:12px 12px 80px}
+  h1{font-size:20px;margin:8px 0 6px}
+  .statusbar{position:sticky;top:0;background:#111a;backdrop-filter:saturate(1.2) blur(4px);padding:8px;border-bottom:1px solid #222;z-index:3}
+  .statusbar span{margin-right:14px}
+  .grid{display:grid;grid-template-columns:1fr 120px 1fr;gap:12px;align-items:center;margin-top:12px}
+  .tank{border:2px solid #2a2f3a;border-radius:8px;padding:8px;min-height:180px;position:relative}
+  .tank h2{font-size:14px;margin:0 0 6px;color:#9fb}
+  .level{height:12px;background:linear-gradient(90deg,#4fc,#0bf);border-radius:6px}
+  .valves{display:grid;gap:8px;margin-top:8px}
+  .valve{display:flex;justify-content:space-between;align-items:center;border:1px solid #2a2f3a;border-radius:6px;padding:6px}
+  .badge{padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid #2a2f3a}
+  .open{background:color-mix(in oklab, var(--ok) 15%, transparent);border-color:color-mix(in oklab, var(--ok) 50%, #2a2f3a);color:#bff2c3}
+  .closed{background:color-mix(in oklab, var(--bad) 12%, transparent);border-color:color-mix(in oklab, var(--bad) 50%, #2a2f3a);color:#ffc0c0}
+  .pump{display:grid;gap:8px;border:2px solid #2a2f3a;border-radius:10px;padding:10px;position:relative}
+  .pump h2{font-size:14px;margin:0 0 2px;color:#fb9}
+  .pump .state{font-weight:700}
+  .btn{cursor:pointer;border:1px solid #2a2f3a;border-radius:8px;padding:10px 12px;background:#151a22;color:var(--fg)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ok{border-color:var(--ok)}
+  .btn.bad{border-color:var(--bad)}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .presets{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  .legend{font-size:12px;color:#aab}
+  .warn{margin-top:8px;color:#ffc07a}
+  .flow{position:absolute;inset:0;pointer-events:none}
+  .arrow{position:absolute;width:8px;height:8px;border-right:2px solid #0bf;border-top:2px solid #0bf;transform:rotate(45deg);opacity:0}
+  .flow.on .arrow{animation:dash 1.1s linear infinite;opacity:1}
+  @keyframes dash { 0%{transform:translateX(0) translateY(0) rotate(45deg)} 100%{transform:translateX(40px) translateY(-40px) rotate(45deg)} }
+  @media (max-width:720px){ .grid{grid-template-columns:1fr} .pump{order:-1} }
+  footer{opacity:.7;font-size:12px;margin-top:16px}
+  code{background:#10151d;padding:2px 6px;border-radius:6px;border:1px solid #233}
 </style>
 </head>
 <body>
-  <h2>Interactive Tank-Pump System</h2>
-  <button onclick="togglePump()">Pump: <span id="pumpState">OFF</span></button>
-  <button onclick="resetAll()">Reset Valves</button>
+  <div class="statusbar" id="status">
+    <span>Pump: <strong id="pumpState">OFF</strong></span>
+    <span>Flow Path: <strong id="flowState">—</strong></span>
+    <span>Risk: <strong id="riskState">OK</strong></span>
+  </div>
 
-  <svg width="900" height="720">
-    <!-- manifolds extended for 5th port -->
-    <line class="pipe" x1="90" y1="200" x2="810" y2="200"/>
-    <line class="pipe" x1="90" y1="460" x2="810" y2="460"/>
+  <div class="wrap">
+    <h1>Interactive Tank–Pump System</h1>
 
-    <!-- pump -->
-    <rect class="pump" x="360" y="300" rx="20" ry="20" width="130" height="80"/>
-    <text x="425" y="345" text-anchor="middle" font-size="26" fill="#fff">Pump</text>
-    <line class="pipe" x1="425" y1="200" x2="425" y2="300"/>
-    <line class="pipe" x1="425" y1="380" x2="425" y2="460"/>
+    <div class="grid">
+      <!-- Left Tank -->
+      <div class="tank" id="leftTank">
+        <h2>Left Tank</h2>
+        <div class="level" id="lvlL" title="Fake level indicator"></div>
+        <div class="valves">
+          <div class="valve"><span>Suction Valve L</span><button class="badge closed" data-valve="suctionL">Closed</button></div>
+          <div class="valve"><span>Return Valve L</span><button class="badge open" data-valve="returnL">Open</button></div>
+        </div>
+        <div class="flow" id="flowL">
+          <!-- flow arrows near left tank -->
+          <div class="arrow" style="left:20px;bottom:20px"></div>
+          <div class="arrow" style="left:48px;bottom:48px"></div>
+        </div>
+      </div>
 
-    <!-- static group labels -->
-    <text x="425" y="240" text-anchor="middle" class="group-label">Return Valves</text>
-    <text x="425" y="480" text-anchor="middle" class="group-label">Suction Valves</text>
+      <!-- Pump -->
+      <div class="pump" id="pump">
+        <h2>Pump</h2>
+        <div>State: <span class="state" id="pumpState2">OFF</span></div>
+        <div class="controls">
+          <button class="btn ok" id="togglePump">Toggle Pump (P)</button>
+          <button class="btn" id="reset">Reset (R)</button>
+        </div>
+        <div class="warn" id="warnings"></div>
+      </div>
 
-    <!-- dynamic labels -->
-    <g id="labels"></g>
+      <!-- Right Tank -->
+      <div class="tank" id="rightTank">
+        <h2>Right Tank</h2>
+        <div class="level" id="lvlR" title="Fake level indicator"></div>
+        <div class="valves">
+          <div class="valve"><span>Suction Valve R</span><button class="badge open" data-valve="suctionR">Open</button></div>
+          <div class="valve"><span>Return Valve R</span><button class="badge closed" data-valve="returnR">Closed</button></div>
+        </div>
+        <div class="flow" id="flowR">
+          <div class="arrow" style="right:20px;top:20px"></div>
+          <div class="arrow" style="right:48px;top:48px"></div>
+        </div>
+      </div>
+    </div>
 
-    <!-- flow groups -->
-    <g id="botFlows"></g>
-    <path id="pumpFlow" class="flow" d="M425,380 V300"/>
-    <g id="topFlows"></g>
-  </svg>
+    <div class="presets">
+      <button class="btn" data-preset="balance">Preset: Balance Tanks</button>
+      <button class="btn" data-preset="fillLeft">Preset: Fill Left</button>
+      <button class="btn" data-preset="fillRight">Preset: Fill Right</button>
+      <button class="btn" data-preset="isolation">Preset: Isolation Test</button>
+    </div>
 
-  <script>
-  // Five ports including pool
-  const xs=[150,310,470,630,790];
-  let openTop=new Set(), openBot=new Set(), pumpOn=false;
+    <div class="legend">
+      <strong>How to read this:</strong>
+      <ul>
+        <li><em>Suction</em> = from tank 👉 pump. <em>Return</em> = pump 👉 tank.</li>
+        <li>Bad combos trigger warnings (dead-head / cavitation). Fix by opening a matching valve.</li>
+        <li>Keyboard: <code>P</code> toggle pump, <code>R</code> reset.</li>
+      </ul>
+    </div>
 
-  const pumpState=document.getElementById('pumpState'),
-        svg=document.querySelector('svg'),
-        botG=document.getElementById('botFlows'),
-        topG=document.getElementById('topFlows'),
-        labelG=document.getElementById('labels');
+    <footer>
+      v1.0 — stores state in your browser. Safe for demos; don’t use this page to control real hardware on the open internet.
+    </footer>
+  </div>
 
-  xs.forEach((x,i)=>{
-    const id=i+1;
-    // Plumbing stubs
-    addPipe(x,120,x,160);
-    addPipe(x,160,x,200);
-    addPipe(x,500,x,460);
-    addPipe(x,500,x,600);
-    // Flow paths
-    addFlow(botG,'b'+id,`M${x},600 V500 V460 H425 V380`);
-    addFlow(topG,'t'+id,`M425,300 V200 H${x} V160 V120`);
-    // Valves
-    addValve(x,160,'top',id);
-    addValve(x,500,'bot',id);
-    // Labels: Pool uses POOL text
-    if(id<5) {
-      addLabel(x,110,'labelTop'+id,`TO TANK ${id}`);
-      addLabel(x,620,'labelBot'+id,`FROM TANK ${id}`);
+<script>
+(function(){
+  const qs = s=>document.querySelector(s);
+  const qsa = s=>Array.from(document.querySelectorAll(s));
+
+  // App state
+  const S = {
+    pump:false,
+    suctionL:false,
+    suctionR:true,
+    returnL:true,
+    returnR:false
+  };
+
+  // Load from localStorage
+  try {
+    const saved = JSON.parse(localStorage.getItem('tankPumpState')||'{}');
+    Object.assign(S, saved);
+  } catch(e){}
+
+  // UI references
+  const pumpState = qs('#pumpState');
+  const pumpState2 = qs('#pumpState2');
+  const flowState = qs('#flowState');
+  const riskState = qs('#riskState');
+  const warnBox = qs('#warnings');
+  const flowL = qs('#flowL');
+  const flowR = qs('#flowR');
+
+  // Helpers
+  function setValveBadge(el, open){
+    el.classList.toggle('open', open);
+    el.classList.toggle('closed', !open);
+    el.textContent = open ? 'Open' : 'Closed';
+  }
+
+  function computePath(){
+    // Build human-readable flow description
+    const suctions = [];
+    if (S.suctionL) suctions.push('Left');
+    if (S.suctionR) suctions.push('Right');
+    const returns = [];
+    if (S.returnL) returns.push('Left');
+    if (S.returnR) returns.push('Right');
+
+    let path = '—';
+    if (S.pump){
+      if (suctions.length && returns.length){
+        path = `${suctions.join(' + ')} → Pump → ${returns.join(' + ')}`;
+      } else if (!suctions.length && !returns.length){
+        path = 'No path';
+      } else if (!suctions.length){
+        path = 'No suction';
+      } else {
+        path = 'No return';
+      }
     } else {
-      addLabel(x,110,'labelTop'+id,'TO POOL');
-      addLabel(x,620,'labelBot'+id,'FROM POOL');
+      path = 'Pump OFF';
     }
-  });
+    flowState.textContent = path;
 
-  function addPipe(x1,y1,x2,y2){
-    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
-    l.setAttribute('class','pipe');
-    l.setAttribute('x1',x1); l.setAttribute('y1',y1);
-    l.setAttribute('x2',x2); l.setAttribute('y2',y2);
-    svg.appendChild(l);
-  }
-  function addFlow(parent,id,d){
-    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
-    p.setAttribute('id',id); p.setAttribute('d',d); p.setAttribute('class','flow');
-    parent.appendChild(p);
-  }
-  function addValve(x,y,side,id){
-    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
-    g.classList.add('valve','closed');
-    g.dataset.side=side; g.dataset.id=id;
-    g.addEventListener('click',toggleValve);
-
-    const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
-    r.setAttribute('x',x-20); r.setAttribute('y',y-20);
-    r.setAttribute('width',40); r.setAttribute('height',40); r.setAttribute('rx',5);
-
-    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
-    t.setAttribute('x',x); t.setAttribute('y',y+6);
-    t.setAttribute('text-anchor','middle');
-    t.textContent=id;
-
-    g.appendChild(r); g.appendChild(t);
-    svg.appendChild(g);
-  }
-  function addLabel(x,y,id,text){
-    const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
-    lbl.setAttribute('id',id);
-    lbl.setAttribute('class','pipe-label hidden');
-    lbl.setAttribute('x',x);
-    lbl.setAttribute('y',y);
-    lbl.setAttribute('text-anchor','middle');
-    lbl.textContent=text;
-    labelG.appendChild(lbl);
-  }
-
-  function toggleValve(e){
-    const side=e.currentTarget.dataset.side,
-          id=+e.currentTarget.dataset.id,
-          set= side==='top'?openTop:openBot;
-    if(set.has(id)){
-      set.delete(id);
-      e.currentTarget.classList.replace('open','closed');
-    } else {
-      set.add(id);
-      e.currentTarget.classList.replace('closed','open');
+    // Risks
+    let risk = 'OK', msg = '';
+    if (S.pump){
+      if (!suctions.length && !returns.length){
+        risk = 'Dead-head & Cavitation';
+        msg = 'Pump ON with no suction and no return: shut it down or open valves.';
+      } else if (!suctions.length){
+        risk = 'Cavitation Risk';
+        msg = 'Pump ON but no suction path. Open a suction valve.';
+      } else if (!returns.length){
+        risk = 'Dead-head Risk';
+        msg = 'Pump ON but no return path. Open a return valve.';
+      }
     }
-    update();
-  }
-  function togglePump(){
-    pumpOn=!pumpOn;
-    pumpState.textContent=pumpOn?'ON':'OFF';
-    update();
-  }
-  function resetAll(){
-    document.querySelectorAll('.valve.open')
-            .forEach(v=>v.classList.replace('open','closed'));
-    openTop.clear(); openBot.clear(); pumpOn=false;
-    pumpState.textContent='OFF';
-    update();
+    riskState.textContent = risk;
+    warnBox.textContent = msg;
+
+    // Flow arrows visible only when pump on AND at least one suction & return open
+    const showFlow = S.pump && (suctions.length>0) && (returns.length>0);
+    flowL.classList.toggle('on', showFlow && (S.suctionL || S.returnL));
+    flowR.classList.toggle('on', showFlow && (S.suctionR || S.returnR));
   }
 
-  function update(){
-    const coreActive = pumpOn && openTop.size>0 && openBot.size>0;
-    document.getElementById('pumpFlow')
-            .classList.toggle('active',coreActive);
+  function syncPump(){
+    const on = S.pump;
+    pumpState.textContent = on ? 'ON' : 'OFF';
+    pumpState2.textContent = on ? 'ON' : 'OFF';
+  }
 
-    xs.forEach((_,i)=>{
-      const id=i+1;
-      const botActive = pumpOn && openBot.has(id) && openTop.size>0;
-      document.getElementById('b'+id)
-              .classList.toggle('active',botActive);
-      document.getElementById('labelBot'+id)
-              .classList.toggle('visible', openBot.has(id));
-      const topActive = pumpOn && openTop.has(id) && openBot.size>0;
-      document.getElementById('t'+id)
-              .classList.toggle('active',topActive);
-      document.getElementById('labelTop'+id)
-              .classList.toggle('visible', openTop.has(id));
+  function syncValves(){
+    qsa('[data-valve]').forEach(b=>{
+      setValveBadge(b, !!S[b.dataset.valve]);
     });
   }
-  </script>
+
+  function save(){
+    localStorage.setItem('tankPumpState', JSON.stringify(S));
+  }
+
+  function render(){
+    syncPump();
+    syncValves();
+    computePath();
+    save();
+  }
+
+  // Wire buttons
+  qs('#togglePump').addEventListener('click', ()=>{ S.pump=!S.pump; render(); });
+  qs('#reset').addEventListener('click', ()=>{
+    S.pump=false; S.suctionL=false; S.suctionR=true; S.returnL=true; S.returnR=false; render();
+  });
+  qsa('[data-valve]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const k = b.dataset.valve;
+      S[k]=!S[k];
+      render();
+    });
+  });
+
+  // Presets
+  qsa('[data-preset]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const p = btn.dataset.preset;
+      if (p==='balance'){ S.suctionL=true; S.suctionR=true; S.returnL=true; S.returnR=true; S.pump=true; }
+      if (p==='fillLeft'){ S.suctionR=true; S.suctionL=false; S.returnL=true; S.returnR=false; S.pump=true; }
+      if (p==='fillRight'){ S.suctionL=true; S.suctionR=false; S.returnR=true; S.returnL=false; S.pump=true; }
+      if (p==='isolation'){ S.suctionL=false; S.suctionR=false; S.returnL=false; S.returnR=false; S.pump=false; }
+      render();
+    });
+  });
+
+  // Keyboard shortcuts
+  window.addEventListener('keydown', (e)=>{
+    if (e.key==='p' || e.key==='P'){ S.pump=!S.pump; render(); }
+    if (e.key==='r' || e.key==='R'){ qs('#reset').click(); }
+  });
+
+  render();
+})();
+</script>
 </body>
 </html>
